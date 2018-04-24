@@ -1,0 +1,34 @@
+#!/bin/bash
+
+if [ $# != 2 ]
+then
+    echo Missing arguments - expected 2 found $#.
+    echo Did you mean something like \'bedrock download all\'?
+    exit 1
+fi
+
+if [ $1 = download ]
+then
+    if [ $2 = 'all' ]
+    then
+        python -m spacy download xx
+    elif [ $2 = 'de' ] || [ $2 = 'german' ] || [ $2 = 'deutsch' ]
+    then
+        python -m spacy download de
+    elif [ $2 = 'en' ] || [ $2 = 'english' ]
+    then
+        python -m spacy download de
+
+    else
+        echo Not implemented for separate languages just yet.
+        echo Use \'bedrock download all\' instead.
+        exit 1
+    fi
+else
+    echo No comprende señor.
+    echo Did you mean something like \'bedrock download all\'?
+    exit 1
+
+fi
+
+python -m nltk.downloader punkt
