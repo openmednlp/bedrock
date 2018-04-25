@@ -28,16 +28,12 @@ def file_to_df(data_path):
         raise NotImplementedError('This file type is not supported')
 
 
-def _get_report_paths(dir_path):
+def get_file_paths(dir_path, extensions=['.txt']):
     return [
         path.join(dir_path, file_name)
         for file_name in listdir(dir_path)
-        if path.isfile(
-            path.join(dir_path, file_name)
-        )
-           and (
-                   path.splitext(file_name)[1] == '.txt'
-           )
+        if path.isfile(path.join(dir_path, file_name))
+        and (path.splitext(file_name)[1] in extensions)
     ]
 
 
@@ -89,7 +85,7 @@ def extract_impressions_from_files(
         reports_dir_path,
         persist_path=None):
 
-    report_paths = _get_report_paths(reports_dir_path)
+    report_paths = get_file_paths(reports_dir_path)
 
     text_ids = []
     texts = []
@@ -112,6 +108,114 @@ def extract_impressions_from_files(
         df.to_csv(persist_path, quoting=csv.QUOTE_NONNUMERIC)
 
     return df
+
+
+def _detect_header(line, headers):
+    for header in headers:
+        header_diff = edit_distance(
+            line, header
+        )
+        is_header = header_diff < 3
+        if is_header:
+            return header
+    return None
+
+
+def section_label(
+        text_lines,
+        headers,
+        case_sensitive=False,
+        header_label='header',
+        default_label='n/a',
+        empty_label='n/a'):
+    # Input a text_lines or list of text_lines lines and get back labels for each line.
+    current_label = default_label
+    max_label_len = max([len(w) for w in headers])
+
+    if not case_sensitive:
+        headers = [h.lower() for h in headers]
+    if type(text_lines) is not list:
+        text_lines = text_lines.splitlines()
+
+    labels = []
+    for line in text_lines:
+        line = line.strip()
+        if not line:
+            labels.append(empty_label)
+            continue
+
+        if not case_sensitive:
+            line = line.lower()
+
+        # No need to look if a line is longer than the longest header
+        # Extending the len by 2 as a tolerance for characters like ':'
+        if len(line) > max_label_len + 2:
+            labels.append(current_label)
+            continue
+
+        new_label = _detect_header(line, headers)
+        if new_label is None:
+            labels.append(current_label)
+            continue
+
+        current_label = new_label
+        labels.append('{} {}'.format(header_label, current_label))
+
+    return labels
+
+
+def section_label_file(
+        file_path,
+        headers,
+        case_sensitive=False,
+        header_label='header',
+        default_label='n/a',
+        empty_label='n/a'):
+    # Read file and label text by section
+    with open(file_path, "r", encoding='utf8') as f:
+        text = f.read()
+
+    text_lines = text.splitlines()
+
+    labels = section_label(
+        text_lines,
+        headers,
+        case_sensitive,
+        header_label,
+        default_label,
+        empty_label
+    )
+
+    return text_lines, labels
+
+
+def section_label_dir(
+        dir_path,
+        headers,
+        case_sensitive=False,
+        header_label='header',
+        default_label='n/a',
+        empty_label='n/a',
+        extensions=('.txt',)):
+    # Read files from dir and label text by section
+    file_paths = get_file_paths(dir_path, extensions)
+
+    text_ids = []
+    text_lists = []
+    text_list_labels = []
+    for file_path in file_paths:
+        text_ids.append(path.basename(file_path))
+        text_list, labels = section_label_file(
+            file_path,
+            headers,
+            case_sensitive,
+            header_label,
+            default_label,
+            empty_label)
+        text_lists.append(text_list)
+        text_list_labels.append(labels)
+
+    return text_ids, text_lists, text_list_labels
 
 
 def balance_df(df, balance_type='random_upsample'):
@@ -173,30 +277,3 @@ def train_validate_split_df(
             train_dataset[target_field_name],
             test_dataset[target_field_name]
             )
-
-
-def reports_to_train_test(reports_dir, persist_path=None):
-    # This does not make sense, because there are no targets given,
-    # but is a good example of the whole process.
-
-    df_impressions = extract_impressions_from_files(reports_dir, persist_path)
-
-    # TODO: Needs new persist path
-    df_sentences = processors.text_to_sentences(
-        df_impressions[TEXT],
-        persist_path
-    )
-
-    # TODO: Needs new persist path
-    processors.pipeline_df(
-        df_sentences,
-        SENTENCE,
-        persist_path
-    )
-
-    return train_validate_split_df(
-        df_sentences,
-        PROCESSED,
-        GROUND_TRUTH,
-        SENTENCE_ID
-    )
