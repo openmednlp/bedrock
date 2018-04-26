@@ -4,7 +4,7 @@ import time
 from os import path
 import pickle
 import glob
-
+import pandas as pd
 
 def config_to_namedtuple(config_path='config.ini'):
     _config = configparser.ConfigParser()
@@ -48,3 +48,7 @@ def get_latest_file(dir_path):
     latest_file = max(list_of_files, key=path.getctime)
     _, filename = path.split(latest_file)
     return filename
+
+
+def lists_to_df(lists, columns):
+    return pd.DataFrame({c: l for c, l in zip(columns,lists)})

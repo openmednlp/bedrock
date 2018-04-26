@@ -3,8 +3,6 @@ import pandas as pd
 from nltk import edit_distance
 import csv
 from sklearn.model_selection import train_test_split
-from bedrock import processors
-
 
 TEXT_ID = 'text_id'
 TEXT = 'text'
@@ -28,7 +26,7 @@ def file_to_df(data_path):
         raise NotImplementedError('This file type is not supported')
 
 
-def get_file_paths(dir_path, extensions=['.txt']):
+def get_file_paths(dir_path, extensions=('.txt',)):
     return [
         path.join(dir_path, file_name)
         for file_name in listdir(dir_path)

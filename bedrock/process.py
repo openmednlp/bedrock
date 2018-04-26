@@ -24,12 +24,40 @@ def get_engine(engine_name, lang):
     return engine
 
 
-_processor = get_engine(engine_name='spacy', lang='de')
+processor = get_engine(engine_name='spacy', lang='de')
 
 
 def set_engine(engine_name='spacy', lang='de'):
-    global _processor
-    _processor = get_engine(engine_name, lang)
+    global processor
+    processor = get_engine(engine_name, lang)
+
+
+def sentence_tokenize(text_input):
+    return processor.sentence_tokenize(text_input)
+
+
+def lemmatize(text_input):
+    return processor.lemmatize(text_input)
+
+
+def stem(text_input):
+    return processor.stem(text_input)
+
+
+def tokenize(text_input):
+    return processor.tokenize(text_input)
+
+
+def remove_short(text_input, min_word_len):
+    return processor.remove_short(text_input, min_word_len)
+
+
+def replace_chars(text_input, chars_to_replace, replacement_char):
+    return processor.replace_chars(text_input, chars_to_replace, replacement_char)
+
+
+def viperize(text_input, vip_words):
+    return processor.viperize(text_input, vip_words)
 
 
 def pipeline(
@@ -62,21 +90,21 @@ def pipeline(
     #   list of tokens for each bedrock, making a function return
     #   list of lists.
 
-    if _processor is None:
+    if processor is None:
         # Set to the default processor, if none is given.
         set_engine()
 
-    texts = _processor.replace_chars(texts, chars_to_remove, replacement_char)
+    texts = processor.replace_chars(texts, chars_to_remove, replacement_char)
 
-    texts = _processor.remove_short(texts, min_word_len)
+    texts = processor.remove_short(texts, min_word_len)
 
-    texts = _processor.viperize(texts, vip_words)
+    texts = processor.viperize(texts, vip_words)
 
     if do_stem:
-        texts = _processor.stem(texts)
+        texts = processor.stem(texts)
 
     if do_tokenize:
-        texts = _processor.tokenize(texts)
+        texts = processor.tokenize(texts)
 
     return texts
 
@@ -120,7 +148,7 @@ def df_sentence_tokenize(text_id, text, ground_truth):
     result = []
 
     enumerated_sentences = enumerate(
-        _processor.sentence_tokenize(text)
+        processor.sentence_tokenize(text)
     )
 
     for sentence_id, sentence in enumerated_sentences:
@@ -191,7 +219,7 @@ def texts_to_sentences_df(
 
 def text_to_sentences(text, persist_path):
     # TODO: Obsolete, but still used in some playground code
-    if _processor is None:
+    if processor is None:
         set_engine()
 
-    return _processor.sentence_tokenizer(text, persist_path=persist_path)
+    return processor.sentence_tokenizer(text, persist_path=persist_path)
