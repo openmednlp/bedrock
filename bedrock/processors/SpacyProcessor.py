@@ -5,10 +5,7 @@ from nltk import SnowballStemmer
 
 class SpacyProcessor(Processor):
     def __init__(self, lang='de'):
-        try:
-            self._nlp = spacy.load(lang)
-        except:
-            raise NotImplementedError
+        self._nlp = spacy.load(lang)
 
         self.stemmer = SnowballStemmer(self._lang_convert[lang])
 
