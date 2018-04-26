@@ -25,7 +25,7 @@ then
         exit 1
     fi
 else
-    echo No comprende señor.
+    echo No comprende senor.
     echo Did you mean something like \'bedrock download all\'?
     exit 1
 
