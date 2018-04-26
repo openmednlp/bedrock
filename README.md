@@ -1,4 +1,5 @@
 # Bedrock
+[![Build Status](https://travis-ci.org/openmednlp/bedrock.svg?branch=master)](https://travis-ci.org/openmednlp/bedrock)
 
 ## You have discovered bedrock
 
