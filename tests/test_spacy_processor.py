@@ -118,5 +118,33 @@ class TestTokenize(unittest.TestCase):
         self.assertEqual(expected, actual)
 
 
+class TestStopWords(unittest.TestCase):
+    def test_sw_remove(self):
+        p = SpacyProcessor()
+        actual = p.remove_stop_words('die Hunden die Katzen die Mäuse')
+        expected = ['Hunden Katzen Mäuse']
+        self.assertEqual(expected, actual)
+
+    def test_sw_remove_as_list(self):
+        p = SpacyProcessor()
+        actual = p.remove_stop_words(['die Hunden die Katzen die Mäuse'])
+        expected = ['Hunden Katzen Mäuse']
+        self.assertEqual(expected, actual)
+
+    def test_sw_remove_texts(self):
+        p = SpacyProcessor()
+        actual = p.remove_stop_words(
+            [
+                'die Hunden die Katzen die Mäuse',
+                'die Mädels die Männer die Frauen']
+        )
+        expected = [
+            'Hunden Katzen Mäuse',
+            'Mädels Männer Frauen'
+        ]
+        self.assertEqual(expected, actual)
+
+
+
 if __name__ == '__main__':
     unittest.main()

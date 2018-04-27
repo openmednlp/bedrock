@@ -50,6 +50,11 @@ class Processor(ABC):
     def remove_short(self, text_input, min_word_len):
         pass
 
+    @abstractmethod
+    def remove_stop_words(self, text_input):
+        pass
+
+
     def replace_chars(
             self,
             text_input,

@@ -1,6 +1,7 @@
 from bedrock.processors.Processor import Processor
 import spacy
 from nltk import SnowballStemmer
+from spacy.lang.de.stop_words import STOP_WORDS
 
 
 class SpacyProcessor(Processor):
@@ -71,3 +72,14 @@ class SpacyProcessor(Processor):
             )
 
         return processed_text
+
+    def remove_stop_words(self, text_input):
+        texts = self._to_list(text_input)
+        processed_texts = []
+
+        for text_tokens in self.tokenize(texts):
+            tokens = [tok for tok in text_tokens if tok not in STOP_WORDS]
+            text = ' '.join(tokens)
+            processed_texts.append(text)
+
+        return processed_texts
