@@ -2,7 +2,7 @@ from bedrock.processors.Processor import Processor
 import spacy
 from nltk import SnowballStemmer
 from spacy.lang.de.stop_words import STOP_WORDS
-
+import string
 
 class SpacyProcessor(Processor):
     def __init__(self, lang='de'):
@@ -78,7 +78,24 @@ class SpacyProcessor(Processor):
         processed_texts = []
 
         for text_tokens in self.tokenize(texts):
-            tokens = [tok for tok in text_tokens if tok not in STOP_WORDS]
+            tokens = [
+                tok for tok in text_tokens if tok not in STOP_WORDS
+            ]
+            text = ' '.join(tokens)
+            processed_texts.append(text)
+
+        return processed_texts
+
+    def remove_punctuation(self, text_input):
+        punctuations = string.punctuation
+
+        texts = self._to_list(text_input)
+        processed_texts = []
+
+        for text_tokens in self.tokenize(texts):
+            tokens = [
+                tok for tok in text_tokens if tok not in punctuations
+            ]
             text = ' '.join(tokens)
             processed_texts.append(text)
 

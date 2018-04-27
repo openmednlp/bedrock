@@ -54,6 +54,9 @@ class Processor(ABC):
     def remove_stop_words(self, text_input):
         pass
 
+    @abstractmethod
+    def remove_punctuation(self, text_input):
+        pass
 
     def replace_chars(
             self,

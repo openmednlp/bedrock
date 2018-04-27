@@ -19,7 +19,7 @@ reqs = [
 
 setup(
     name='bedrock',
-    version='0.1.0.dev9',
+    version='0.1.0.dev10',
     description=("Bedrock is a high-level text pre-processing API, "
                  "written in Python and can run on NLTK or Spacy "
                  "as its backends."),

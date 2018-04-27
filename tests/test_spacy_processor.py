@@ -145,6 +145,32 @@ class TestStopWords(unittest.TestCase):
         self.assertEqual(expected, actual)
 
 
+class TestPunctuations(unittest.TestCase):
+    def test_punct_remove(self):
+        p = SpacyProcessor()
+        actual = p.remove_punctuation('Die Hunden, die Katzen und Die Mäuse.')
+        expected = ['Die Hunden die Katzen und Die Mäuse']
+        self.assertEqual(expected, actual)
+
+    def test_punct_remove_as_list(self):
+        p = SpacyProcessor()
+        actual = p.remove_punctuation(['Die Hunden, die Katzen und Die Mäuse.'])
+        expected = ['Die Hunden die Katzen und Die Mäuse']
+        self.assertEqual(expected, actual)
+
+    def test_punct_remove_texts(self):
+        p = SpacyProcessor()
+        actual = p.remove_punctuation(
+            [
+                'Die Hunden, die Katzen und Die Mäuse.',
+                'Die Mädels und die Männer? Die Frauen!']
+        )
+        expected = [
+            'Die Hunden die Katzen und Die Mäuse',
+            'Die Mädels und die Männer Die Frauen'
+        ]
+        self.assertEqual(expected, actual)
+
 
 if __name__ == '__main__':
     unittest.main()

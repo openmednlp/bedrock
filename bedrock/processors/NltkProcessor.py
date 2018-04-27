@@ -82,3 +82,9 @@ class NltkProcessor(Processor):
             )
 
         return processed_text
+
+    def remove_stop_words(self, text_input):
+        raise NotImplementedError
+
+    def remove_punctuation(self, text_input):
+        raise NotImplementedError
