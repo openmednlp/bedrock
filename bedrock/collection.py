@@ -3,6 +3,7 @@ import pandas as pd
 from nltk import edit_distance
 import csv
 from sklearn.model_selection import train_test_split
+from collections import Counter
 
 TEXT_ID = 'text_id'
 TEXT = 'text'
@@ -216,28 +217,28 @@ def section_label_dir(
     return text_ids, text_lists, text_list_labels
 
 
-def balance_df(df, balance_type='random_upsample'):
+def balance_df(df, target_field, balance_type='random_upsample'):
+    # TODO: Rename to stratify
+
     if balance_type is None:
         print('balance: no type defined, exiting...')
         return df
 
-    positive_count = sum(df.binary_class)
-    negative_count = len(df) - positive_count
-    difference = abs(negative_count - positive_count)
+    target_count = Counter(df[target_field])
+    most_common_class, most_common_count = target_count.most_common(1)[0]
 
-    if difference < 2:
-        print('balance: nothing to do, exiting...')
-        return df
-
+    df_upsampled = df
     if balance_type.lower() == 'random_upsample':
-        is_positive_dominant = positive_count > negative_count
-        if is_positive_dominant:
-            minority = df[df.binary_class]
-        else:
-            minority = df[~df.binary_class]
+        for key in target_count.keys():
+            if key == most_common_class:
+                continue
 
-        upsampled = minority.sample(n=difference, replace=True)
-        return df.append(upsampled, ignore_index=True)
+            difference = most_common_count - target_count[key]
+            minority = df[df[target_field] == key]
+            upsampled = minority.sample(n=difference, replace=True)
+            df_upsampled = df_upsampled.append(upsampled, ignore_index=True)
+
+        return df_upsampled
 
     raise ValueError('Wrong balancing type')
 
