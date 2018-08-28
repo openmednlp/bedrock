@@ -44,13 +44,13 @@ class Ubertext():
                                'documentBaseUri = "file:/srv/webanno/repository/project/1/document/31/source/"',
                                'isLastSegment = "false"/>'])
 
-        self.sofa = '<cas:Sofa xmi:id="{{sofa}}" sofaNum="1" sofaID="_InitialView" mimeType="text" sofaString="{{sofa_string}}"/>'
+        self.sofa = '<cas:Sofa xmi:id="{sofa}" sofaNum="1" sofaID="_InitialView" mimeType="text" sofaString="{sofa_string}"/>'
 
-        self.token = '<type4:Token xmi:id="{{id}}" sofa="{{sofa}}" begin="{{begin}}" end="{{end}}"/>'
+        self.token = '<type4:Token xmi:id="{id}" sofa="{sofa}" begin="{begin}" end="{end}"/>'
 
-        self.sentence = '<type4:Sentence xmi:id="{{id}}" sofa="{{sofa}}" begin="{{begin}}" end="{{end}}"/>'
+        self.sentence = '<type4:Sentence xmi:id="{id}" sofa="{sofa}" begin="{begin}" end="{end}"/>'
 
-        self.view = '<cas:View sofa="{{sofa}}" members="{{member_list}}"/>'
+        self.view = '<cas:View sofa="{sofa}" members="{member_list}"/>'
 
         self._UIMA_XMI_END = '</xmi:XMI>'
 
@@ -70,22 +70,22 @@ class Ubertext():
 
         sofa = 12 # TODO 'sofa': ???
         tmp = {'sofa': 12, 'sofa_string': self.spacy_doc.text}
-        rows.append(self.sofa.format(**tmp))
+        rows.append(self.sofa.format(sofa=sofa, sofa_string=self.spacy_doc.text))
         rows.append('\n')
 
-        i = 1
+        k = 1
         for j, sent in enumerate(self.spacy_doc.sents):
-            tmp = {'id': i, 'sofa': sofa, 'begin': sent.start_char, 'end': len(sent.text)}
+            tmp = {'id': k, 'sofa': sofa, 'begin': sent.start_char, 'end': len(sent.text)}
             rows.append(self.sentence.format(**tmp))
             rows.append('\n')
-            i+=1
+            k+=1
             for i, tok in enumerate(sent):
-                tmp = {'id': i, 'sofa': sofa, 'begin': tok.idx, 'end': tok.__len__()}
+                tmp = {'id': k, 'sofa': sofa, 'begin': tok.idx, 'end': tok.__len__()}
                 rows.append(self.token.format(**tmp))
                 rows.append('\n')
-                i += 1
-        tmp = {'sofa': sofa, 'member_list': range(1, )}
-        rows.append(self.view.format(**tmp)) # TODO
+                k += 1
+        tmp = {'sofa': sofa, 'member_list': ''.join([str(k) for k in range(1, i+1)])} # TODO
+        rows.append(self.view.format(**tmp))
         rows.append('\n')
         rows.append(self._UIMA_XMI_END)
         rows.append('\n')
