@@ -2,6 +2,9 @@ import json
 import spacy
 import pandas as pd
 import re as re
+from langdetect import detect
+import html
+
 
 class Ubertext():
 
@@ -11,15 +14,12 @@ class Ubertext():
         self.__set_text_from_report(file_path)
         self.file_path = file_path
 
-        #preprocess such that webanno and spacy text the same, no changes in Webanno
-        #side effect: loose structure of report (newline)
-        self.text_preproc = self.text_raw
-        ###to do:  verify with export Webanno
-        self.text_preproc.strip('"')
-        #self.text_preproc = self.text_preproc.replace("\n", " ")
-        #self.text_preproc =' '.join( filter( len, self.text_preproc.split( ' ' ) ))
+
+        self.text_preproc = self.__preprocess()
+        self.language = detect(self.text_preproc)
 
         nlp = spacy.load(lang)
+
 
         #always unescaped text otherwise tokenization does not work properly
         self.spacy_doc = nlp( self.text_preproc )
@@ -130,7 +130,7 @@ class Ubertext():
                 tmp ={'id': xmi_id, 'sofa': sofa_id, 'begin': sentence_list['beg'][s].astype(int),
                        'end': sentence_list['beg'][s+1].astype(int)-1 }
             else:
-                tmp ={'id': xmi_id, 'sofa': sofa_id, 'begin': sentence_list['beg'][s],
+                tmp ={'id': xmi_id, 'sofa': sofa_id, 'begin': sentence_list['beg'][s].astype(int),
                        'end': doc_len }
             xmi_id += 1
             rows.append(sentence.format(**tmp))
@@ -216,6 +216,27 @@ class Ubertext():
         pos_map['pos_unesc_uni'][pos_map['pos_unesc_uni'] == pos_map['pos_unesc_uni'].shift(1)] = -99
 
         return string_escap, pos_map
+
+    def __preprocess(self):
+        """ argument text_raw: string
+            returns text_proproc: processed string in utf_8 format, escaped
+            """
+
+        # preprocess such that webanno and spacy text the same, no changes in Webanno
+        # side effect: loose structure of report (newline)
+
+        text_preproc=self.text_raw
+
+        #text_preproc = text_raw
+
+        #to do:  verify with export Webanno
+        text_preproc.strip('"')
+        # text_preproc = text_preproc.replace("\n", " ")
+        # text_preproc =' '.join( filter( len, text_preproc.split( ' ' ) ))
+        text_preproc=html.unescape(text_preproc)
+
+        return text_preproc
+
 
 def load_ubertext(file_path):
     import bedrock.common
