@@ -7,6 +7,7 @@ import html
 
 
 class Ubertext():
+    #to do: additional constructur with string
 
     def __init__(self, file_path, lang='de'):
         print(file_path)
@@ -14,23 +15,29 @@ class Ubertext():
         self.__set_text_from_report(file_path)
         self.file_path = file_path
 
+        #members to keep tokens, annotations and relations
+        self.token_df = pd.DataFrame(columns=['doc_id', 'token_id', 'sent_id' 'text', 'beg', 'end',
+                                              'is_sent_start','pos', 'dep'])
+        self.anno_df=pd.DataFrame(columns=['doc_id','token_id', 'anno_id', 'class', 'label'] )
+        self.rel_df=pd.DataFrame(columns=['doc_id','gov_anno_id', 'dep_anno_id', 'role'])
+
 
         self.text_preproc = self.__preprocess()
         self.language = detect(self.text_preproc)
 
         nlp = spacy.load(lang)
 
-
         #always unescaped text otherwise tokenization does not work properly
         self.spacy_doc = nlp( self.text_preproc )
 
 
-        #including pos tags, dependency tags
-        self.token_list_df = pd.DataFrame(
+        #to do: add pos tags, dependency tags
+        tmp_token_df = pd.DataFrame(
             [(token.text, token.idx, token.idx + len(token.text), token.is_sent_start, token_id)
-             for token_id, token in enumerate(self.spacy_doc)],
+            for token_id, token in enumerate(self.spacy_doc)],
             columns=['text', 'beg', 'end', 'is_sent_start', 'id'] )
 
+        self.token_df = self.token_df.append(tmp_token_df, ignore_index=True)
 
         #Anno_id, label label, lable_value token_Id, unique(token_id, label_id)
         #doc_id tok_id sent_id idx txt pos dep_tok_id dep_type
@@ -56,21 +63,24 @@ class Ubertext():
             #doc_len = len(text_preproc_write)
 
             #transform token positions to escaped string version
-            # token_list_df_out = self.token_list_df.merge(escape_map[['pos_esc', 'pos_unesc_uni']],
+            # token_df_out = self.token_df.merge(escape_map[['pos_esc', 'pos_unesc_uni']],
             #                                      how='left', left_on='beg', right_on='pos_unesc_uni')
-            # token_list_df_out.rename(columns={'pos_esc': 'beg_esc'}, inplace=True)
-            # token_list_df_out = token_list_df_out.merge(escape_map[['pos_esc', 'pos_unesc_uni']],
+            # token_df_out.rename(columns={'pos_esc': 'beg_esc'}, inplace=True)
+            # token_df_out = token_df_out.merge(escape_map[['pos_esc', 'pos_unesc_uni']],
             #                                      how='left', left_on='end', right_on='pos_unesc_uni')
-            # token_list_df_out.rename(columns={'pos_esc': 'end_esc'}, inplace=True)
-            # token_list_df_out['beg'] = token_list_df_out['beg_esc']
-            # token_list_df_out['end'] = token_list_df_out['end_esc']
-            #token_list_df_out = self.token_list_df
+            # token_df_out.rename(columns={'pos_esc': 'end_esc'}, inplace=True)
+            # token_df_out['beg'] = token_df_out['beg_esc']
+            # token_df_out['end'] = token_df_out['end_esc']
+            #token_df_out = self.token_df
             #doc_len = len(self.text_preproc)
         else:
             text_preproc_write = self.text_preproc
 
         doc_len = len(self.text_preproc)
-        token_list_df_out = self.token_list_df
+
+        #escaped version of tokens
+        #to do: check whether necessary
+        token_df_out = self.token_df
 
 
         XML_HEADER_ = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -133,16 +143,16 @@ class Ubertext():
 
         sentence_list=pd.DataFrame()
 
-        token_nr =len(token_list_df_out)
+        token_nr =len(token_df_out)
         for t in range(0, token_nr):
-            tmp = {'id': xmi_id, 'sofa': sofa_id, 'begin': token_list_df_out['beg'][t],
-                   'end': token_list_df_out['end'][t] }
+            tmp = {'id': xmi_id, 'sofa': sofa_id, 'begin': token_df_out['beg'][t],
+                   'end': token_df_out['end'][t] }
             rows.append(token.format(**tmp))
             rows.append('\n')
             xmi_id += 1
 
-            if token_list_df_out['is_sent_start'][t]==True or t==0:
-                sentence_list = sentence_list.append(token_list_df_out.iloc[t], ignore_index=True)
+            if token_df_out['is_sent_start'][t]==True or t==0:
+                sentence_list = sentence_list.append(token_df_out.iloc[t], ignore_index=True)
 
 
         for s in range(0, len(sentence_list)):
@@ -235,7 +245,7 @@ class Ubertext():
         pos_map = pd.DataFrame({'pos_esc': list(range(len(string_escap)+1)), 'pos_unesc': char_inserts})
         pos_map['pos_unesc_uni'] = pos_map['pos_unesc']
         #issue: fill in 'nan' will convert to object but need integer
-        #not accepted change
+        #to do: change required, not a good solution
         pos_map['pos_unesc_uni'][pos_map['pos_unesc_uni'] == pos_map['pos_unesc_uni'].shift(1)] = -99
 
         return string_escap, pos_map
@@ -271,13 +281,11 @@ def load_ubertext(file_path):
 if __name__ == '__main__':
 
     import os as os
-#need constructor with text
+
 
 
     #file_dir = "/home/achermannr/nlp_local/data/iter1/"
     file_dir = "/home/achermannr/nlp_local/data/test/"
-
-
 
 
     spacy_model = '/home/achermannr/nlp_local/library/de_core_news_sm-2.0.0/de_core_news_sm/de_core_news_sm-2.0.0'
@@ -296,11 +304,11 @@ if __name__ == '__main__':
         #utx.persist_json(file_dir + file_names[i].replace('.txt', '.json'))
 
         #find last name write table with 3 words before and last
-        #a=utx.token_list_df['id'][utx.token_list_df['text'].str.contains('Tumor')].astype(int)
+        #a=utx.token_df['id'][utx.token_df['text'].str.contains('Tumor')].astype(int)
         #df=pd.DataFrame()
 
         # for j in range(0,len(a)):
-        #     tmp = utx.token_list_df['text'][a.iloc[j]-3:a.iloc[j] + 3].to_frame()
+        #     tmp = utx.token_df['text'][a.iloc[j]-3:a.iloc[j] + 3].to_frame()
         #     tmp.columns=["a", "b", "c", "d", "e", "f", "g"]
         #     df=df.append(tmp, ignore_index=True)
         #
