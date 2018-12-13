@@ -4,46 +4,65 @@ import pandas as pd
 import re as re
 from langdetect import detect
 import html
+from pycas.cas.writer.CSVWriter import CSVWriter
+from pycas.cas.core.CasFactory import CasFactory
 
 
 class Ubertext():
-    #to do: additional constructur with string
+    #todo: additional constructor with string
+    #todo: wide format, flat  export_flat for ML learning
 
-    def __init__(self, file_path, lang='de'):
+    def __init__(self, file_path = None, typesysXML_path = None, text = None):
+        """ constructor: text (raw format)
+                         file_path to text (raw format)
+                         path to UIMA_xmi, typesysXML
+                    """
         print(file_path)
-
-        self.__set_text_from_report(file_path)
-        self.file_path = file_path
 
         #members to keep tokens, annotations and relations
         self.token_df = pd.DataFrame(columns=['doc_id', 'token_id', 'sent_id' 'text', 'beg', 'end',
-                                              'is_sent_start','pos', 'dep'])
-        self.anno_df=pd.DataFrame(columns=['doc_id','token_id', 'anno_id', 'class', 'label'] )
-        self.rel_df=pd.DataFrame(columns=['doc_id','gov_anno_id', 'dep_anno_id', 'role'])
+                                              'is_sent_start', 'pos', 'dep'])
+        self.anno_df = pd.DataFrame(columns=['doc_id', 'token_id', 'anno_id', 'class', 'label'])
+        self.rel_df = pd.DataFrame(columns=['doc_id', 'gov_anno_id', 'dep_anno_id', 'role'])
 
+        self.text_raw = ''
 
-        self.text_preproc = self.__preprocess()
-        self.language = detect(self.text_preproc)
+        if str(file_path).endswith("xmi"):
 
-        nlp = spacy.load(lang)
+            if typesysXML_path == None:
+                raise ValueError('typesysXML path missing')
 
-        #always unescaped text otherwise tokenization does not work properly
-        self.spacy_doc = nlp( self.text_preproc )
+            casXMI = self.read_file_to_string(file_path)
+            typesysXML = self.read_file_to_string(typesysXML_path)
+            cas = CasFactory().buildCASfromStrings(casXMI, typesysXML)
+            self.text_preproc = cas.documentText
+            self.language = detect(self.text_preproc)
 
+            token_csv, UIMA_csv = CSVWriter().writeToCSV(cas)
 
-        #to do: add pos tags, dependency tags
-        tmp_token_df = pd.DataFrame(
-            [(token.text, token.idx, token.idx + len(token.text), token.is_sent_start, token_id)
-            for token_id, token in enumerate(self.spacy_doc)],
-            columns=['text', 'beg', 'end', 'is_sent_start', 'id'] )
+        else:
+            if text != None:
+                self.text_raw=text
+            else:
+                self.__set_text_from_report(file_path)
+                self.file_path = file_path
 
-        self.token_df = self.token_df.append(tmp_token_df, ignore_index=True)
+            self.text_preproc = self.__preprocess()
+            self.language = detect(self.text_preproc)
 
-        #Anno_id, label label, lable_value token_Id, unique(token_id, label_id)
-        #doc_id tok_id sent_id idx txt pos dep_tok_id dep_type
-        self.annotation_list_df = pd.DataFrame()
-        #doc_id, anno_from, anno_to
-        self.relation_list_df = pd.DataFrame()
+            #todo: external variable spacy_model, should be language
+            nlp = spacy.load(spacy_model)
+
+            #always unescaped text otherwise tokenization does not work properly
+            self.spacy_doc = nlp( self.text_preproc)
+
+            #todo: add pos tags, dependency tags
+            tmp_token_df = pd.DataFrame(
+                [(token.text, token.idx, token.idx + len(token.text), token.is_sent_start, token_id)
+                for token_id, token in enumerate(self.spacy_doc)],
+                columns=['text', 'beg', 'end', 'is_sent_start', 'id'] )
+
+            self.token_df = self.token_df.append(tmp_token_df, ignore_index=True)
 
 
     def create_UIMA_xmi_from_spacy(self, escape=False):
@@ -166,7 +185,6 @@ class Ubertext():
             rows.append(sentence.format(**tmp))
             rows.append('\n')
 
-
         #to do change, hard coded start xmi_id
         tmp = {'sofa': sofa_id, 'member_list': ' '.join([str(xmi_id)
                 for xmi_id in range(13, xmi_id)])}
@@ -183,6 +201,7 @@ class Ubertext():
     def __set_text_from_report(self, file_path):
         with open(file_path, 'r') as f:
             self.text_raw = f.read()
+
 
     def __set_json(self, file_path):
         with open(file_path, 'r') as f:
@@ -256,7 +275,7 @@ class Ubertext():
             """
 
         # preprocess such that webanno and spacy text the same, no changes in Webanno
-        # side effect: loose structure of report (newline)
+        # side effect: lose structure of report (newline)
 
         text_preproc=self.text_raw
 
@@ -272,6 +291,11 @@ class Ubertext():
 
         return text_preproc
 
+    def read_file_to_string(self, file_path):
+        with open(file_path) as f:
+            s = f.read()
+        return s
+
 
 def load_ubertext(file_path):
     import bedrock.common
@@ -282,26 +306,30 @@ if __name__ == '__main__':
 
     import os as os
 
-
-
-    #file_dir = "/home/achermannr/nlp_local/data/iter1/"
-    file_dir = "/home/achermannr/nlp_local/data/test/"
-
-
-    spacy_model = '/home/achermannr/nlp_local/library/de_core_news_sm-2.0.0/de_core_news_sm/de_core_news_sm-2.0.0'
-
-    file_names = [f for f in os.listdir(file_dir) if f.endswith('.txt')]
-
-    for i in range(0,len(file_names)):
-        utx = Ubertext(file_dir + file_names[i], lang=spacy_model)
-        #utx.create_UIMA_xmi_from_spacy(escape=True)
-        #to do called twice
-        if utx.language=='de':
-            utx.persist_xmi( file_dir + file_names[i].replace('.txt', '.xmi'), escape=True)
+    # # file_dir = "/home/achermannr/nlp_local/data/iter1/"
+    # file_dir = "/home/achermannr/nlp_local/data/test/"
+    #
+    # spacy_model = '/home/achermannr/nlp_local/library/de_core_news_sm-2.0.0/de_core_news_sm/de_core_news_sm-2.0.0'
+    #
+    # file_names = [f for f in os.listdir(file_dir) if f.endswith('.txt')]
+    #
+    # for i in range(0, len(file_names)):
+    #     utx = Ubertext(file_dir + file_names[i])
+    #     # utx.create_UIMA_xmi_from_spacy(escape=True)
+    #     # to do called twice
+    #     if utx.language == 'de':
+    #         utx.persist_xmi(file_dir + file_names[i].replace('.txt', '.xmi'), escape=True)
 
 
 
-        #utx.persist_json(file_dir + file_names[i].replace('.txt', '.json'))
+    ###UIMA
+
+    test_path = "/home/achermannr/nlp_local/data/export/"
+    file_xmi = test_path + "2051460_5616.xmi"
+    file_type_syst = test_path + "typesystem.xml"
+
+    utx = Ubertext(file_path=file_xmi, typesysXML_path=file_type_syst )
+    #utx.persist_json(file_dir + file_names[i].replace('.txt', '.json'))
 
         #find last name write table with 3 words before and last
         #a=utx.token_df['id'][utx.token_df['text'].str.contains('Tumor')].astype(int)
