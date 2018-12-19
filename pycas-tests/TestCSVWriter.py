@@ -1,8 +1,6 @@
 import unittest2 as unittest
 
-import xml.etree.ElementTree as ET
-
-from pycas.cas.writer.CSVWriter import CSVWriter
+from bedrock.pycas.cas.writer.CSVWriter import CSVWriter
 from pycas.cas.core.CasFactory import CasFactory
 
 

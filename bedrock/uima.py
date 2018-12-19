@@ -11,7 +11,7 @@ from bedrock.pycas.cas.writer import XmiWriter
 from bedrock.prelabel.findpattern import findpattern
 
 #from bedrock.pycas.cas.writer.CSVConverter import CSVConverter
-from bedrock.pycas.cas.core.CasFactory import CasFactory
+from bedrock.pycas.cas.core import CasFactory
 
 class Ubertext:
 
