@@ -10,7 +10,7 @@ from bedrock.pycas.type.cas import TypeSystemFactory
 from bedrock.pycas.cas.writer import XmiWriter
 from bedrock.prelabel.findpattern import findpattern
 
-from bedrock.pycas.cas.writer.CSVConverter import CSVConverter
+#from bedrock.pycas.cas.writer.CSVConverter import CSVConverter
 from bedrock.pycas.cas.core.CasFactory import CasFactory
 
 class Ubertext:
@@ -46,7 +46,7 @@ class Ubertext:
             self.text_preproc = cas.documentText
             self.language = detect(self.text_preproc)
 
-            self.token_df, self.anno_df, self.relation_df = CSVConverter().writeToCSV(cas)
+            #self.token_df, self.anno_df, self.relation_df = CSVConverter().writeToCSV(cas)
         else:
             if text is not None:
                 self.text_raw=text
@@ -211,18 +211,21 @@ if __name__ == '__main__':
     file_name = '2051460_5616.txt'
     spacy_model = '/home/achermannr/nlp_local/library/de_core_news_sm-2.0.0/de_core_news_sm/de_core_news_sm-2.0.0'
 
-    utxt = Ubertext(file_dir + file_name)
+    input_filepath = file_dir + file_name
+    utxt = Ubertext(input_filepath)
     cas = utxt.build_cas_from_spacy('/home/marko/projects/openmednlp/typesystem.xml')
     cas = utxt.add_tnm_prelabel_to_cas(cas, "prelabel/patterns.json")
     xmi_writer = XmiWriter.XmiWriter()
     xmi_writer.write(cas, '/home/marko/test.xmi')
 
+    """
     test_path = "/home/achermannr/nlp_local/data/export/"
     file_xmi = test_path + "2051460_5616.xmi"
     file_type_syst = test_path + "typesystem.xml"
 
     utx = Ubertext(file_path=file_xmi, typesysXML_path=file_type_syst )
     utx.write_csv("/home/achermannr/nlp_local/data/export/xxx")
+    """
 
     #utx.persist_json(file_dir + file_names[i].replace('.txt', '.json'))
 
