@@ -44,7 +44,9 @@ class Ubertext:
             typesysXML = self.read_file_to_string(typesysXML_path)
             cas = CasFactory().buildCASfromStrings(casXMI, typesysXML)
             self.text_preproc = cas.documentText
-            self.language = detect(self.text_preproc)
+
+            self.language = detect(self.text_preproc) # TODO: why do we get 'en' although 'de'
+            self.language = 'de'
 
             #self.token_df, self.anno_df, self.relation_df = CSVConverter().writeToCSV(cas)
         else:
@@ -55,7 +57,8 @@ class Ubertext:
                 self.text_raw = self.__set_text_from_report_file_path(file_path)
 
             self.text_preproc = self.__preprocess()
-            self.language = detect(self.text_preproc)
+            self.language = detect(self.text_preproc)  # TODO: why do we get 'en' although 'de'
+            self.language = 'de'
             nlp = spacy.load(self.language)
             self.spacy_doc = nlp( self.text_preproc)
 
@@ -88,7 +91,10 @@ class Ubertext:
 
         token_nr = len(token_df_out)
         for t in range(0, token_nr):
-            fs_token = cas.createAnnotation(token_type, {'begin': token_df_out['beg'][t], 'end': token_df_out['end'][t]})
+            fs_token = cas.createAnnotation(token_type, {
+                'begin': int(token_df_out['beg'][t]),
+                'end': int(token_df_out['end'][t])
+            })
             cas.addToIndex(fs_token)
             if token_df_out['is_sent_start'][t] is True or t == 0:
                 sentence_list = sentence_list.append(token_df_out.iloc[t], ignore_index=True)
