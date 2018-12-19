@@ -4,7 +4,7 @@ import pandas as pd
 import re as re
 from langdetect import detect
 import html
-from pycas.cas.writer.CSVWriter import CSVWriter
+from pycas.cas.writer.CSVConverter import CSVConverter
 from pycas.cas.core.CasFactory import CasFactory
 
 
@@ -20,13 +20,14 @@ class Ubertext():
         print(file_path)
 
         #members to keep tokens, annotations and relations
-        self.token_df = pd.DataFrame(columns=['doc_id', 'token_id', 'sent_id' 'text', 'beg', 'end',
+        self.token_df = pd.DataFrame(columns=['doc_id',  'sent_id', 'token_id', 'text', 'begin', 'end',
                                               'is_sent_start', 'pos', 'dep'])
-        self.anno_df = pd.DataFrame(columns=['doc_id', 'token_id', 'anno_id', 'class', 'label'])
-        self.rel_df = pd.DataFrame(columns=['doc_id', 'gov_anno_id', 'dep_anno_id', 'role'])
+        self.anno_df = pd.DataFrame(columns=['doc_id', 'anno_id', 'token_id', 'begin', 'end', 'layer', 'feature', 'class'])
+        self.rel_df = pd.DataFrame(columns=['doc_id', 'gov_anno_id', 'dep_anno_id', 'layer', 'role'])
 
         self.text_raw = ''
 
+        #UIMA xmi format
         if str(file_path).endswith("xmi"):
 
             if typesysXML_path == None:
@@ -38,8 +39,8 @@ class Ubertext():
             self.text_preproc = cas.documentText
             self.language = detect(self.text_preproc)
 
-            token_csv, UIMA_csv = CSVWriter().writeToCSV(cas)
-
+            self.token_df, self.anno_df, self.relation_df = CSVConverter().writeToCSV(cas)
+            print("yes")
         else:
             if text != None:
                 self.text_raw=text
@@ -56,7 +57,7 @@ class Ubertext():
             #always unescaped text otherwise tokenization does not work properly
             self.spacy_doc = nlp( self.text_preproc)
 
-            #todo: add pos tags, dependency tags
+            #todo: add pos tags, dependency tags output spacy
             tmp_token_df = pd.DataFrame(
                 [(token.text, token.idx, token.idx + len(token.text), token.is_sent_start, token_id)
                 for token_id, token in enumerate(self.spacy_doc)],
@@ -76,7 +77,7 @@ class Ubertext():
 
         #transformation if escaped
         if escape == True:
-            ###remark position of the token don't need to be changed
+            #remark position of the token don't need to be changed
             #refer to unescaped string
             text_preproc_write, escape_map = self.__escape(self.text_preproc)
             #doc_len = len(text_preproc_write)
@@ -264,7 +265,7 @@ class Ubertext():
         pos_map = pd.DataFrame({'pos_esc': list(range(len(string_escap)+1)), 'pos_unesc': char_inserts})
         pos_map['pos_unesc_uni'] = pos_map['pos_unesc']
         #issue: fill in 'nan' will convert to object but need integer
-        #to do: change required, not a good solution
+        #todo: change -99 to nan
         pos_map['pos_unesc_uni'][pos_map['pos_unesc_uni'] == pos_map['pos_unesc_uni'].shift(1)] = -99
 
         return string_escap, pos_map
@@ -272,16 +273,15 @@ class Ubertext():
     def __preprocess(self):
         """ argument text_raw: string
             returns text_proproc: processed string in utf_8 format, escaped
-            """
 
-        # preprocess such that webanno and spacy text the same, no changes in Webanno
-        # side effect: lose structure of report (newline)
+            preprocess such that webanno and spacy text the same, no changes in Webanno
+            side effect: lose structure of report (newline)
+            """
 
         text_preproc=self.text_raw
 
-        #text_preproc = text_raw
 
-        #to do:  verify with export Webanno
+        #todo:  verify with export Webanno
         #utf-8 encoding
         text_preproc.strip('"')
         text_preproc = text_preproc.replace("\n", " ")
@@ -295,6 +295,21 @@ class Ubertext():
         with open(file_path) as f:
             s = f.read()
         return s
+
+
+    def write_csv(self, file_path):
+        """ write csv file, one line per token includings annotations
+
+            assuming for each token only 1 annotation per feature.class
+        """
+
+        self.anno_df['col_pivot'] =  self.anno_df['layer'] + "." + self.anno_df['feature']
+        self.token_df.set_index('token_id')
+        t1 = self.anno_df.pivot(index='token_id', values='class' ,
+                            columns='col_pivot' )
+        t2 = self.token_df.merge(t1, left_on='token_id', right_index=True, how = 'left')
+        t2.to_csv(file_path, sep="\t")
+
 
 
 def load_ubertext(file_path):
@@ -329,6 +344,8 @@ if __name__ == '__main__':
     file_type_syst = test_path + "typesystem.xml"
 
     utx = Ubertext(file_path=file_xmi, typesysXML_path=file_type_syst )
+    utx.write_csv("/home/achermannr/nlp_local/data/export/xxx")
+
     #utx.persist_json(file_dir + file_names[i].replace('.txt', '.json'))
 
         #find last name write table with 3 words before and last
