@@ -1,0 +1,15 @@
+{
+  "TNM": {
+    "all": {
+      "description": "General TNM detection",
+      "regex": "([a|y|p|r|c|u]+T[0-4|x][a|b|c]?|[a|y|p|r|c|u]+N[0-3|x]|[a|y|p|r|c|u]+M[0-2|x][a|b|c]?)",
+      "label": "TNM",
+      "xmi_property": "TNM"
+    },
+    "version": {
+      "description": "what does this tag contain?",
+      "regex": "regex to detect",
+      "label": "label to give"
+    }
+  }
+}
