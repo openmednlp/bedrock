@@ -9,13 +9,19 @@ from bedrock.pycas.cas.core import CAS
 from bedrock.pycas.type.cas import TypeSystemFactory
 from bedrock.pycas.cas.writer import XmiWriter
 from bedrock.prelabel.findpattern import findpattern
+from bedrock.pycas.cas.core.CasFactory import CasFactory
 
-#from bedrock.pycas.cas.writer.CSVConverter import CSVConverter
-from bedrock.pycas.cas.core import CasFactory
+
+#to replace for escape with html
+from xml.sax.saxutils import quoteattr
+
+from bedrock.pycas.cas.writer.CAStoDf import CAStoDf
+
+#from bedrock.pycas.cas.core import CasFactory
 
 class Ubertext:
 
-    # TODO: additional constructor with string
+
     # TODO: wide format, flat  export_flat for ML learning
 
     def __init__(self, file_path=None, typesysXML_path=None, text=None):
@@ -30,9 +36,7 @@ class Ubertext:
                                               'is_sent_start', 'pos', 'dep'])
         self.anno_df = pd.DataFrame(columns=['doc_id', 'anno_id', 'token_id', 'begin', 'end', 'layer', 'feature', 'class'])
         self.rel_df = pd.DataFrame(columns=['doc_id', 'gov_anno_id', 'dep_anno_id', 'layer', 'role'])
-
-        # TODO method call with return to text_raw
-        self.text_raw = ''
+        self.cas = None
 
         # UIMA xmi format
         if str(file_path).endswith("xmi"):
@@ -40,26 +44,31 @@ class Ubertext:
             if typesysXML_path is None:
                 raise ValueError('typesysXML path missing')
 
-            casXMI = self.read_file_to_string(file_path)
-            typesysXML = self.read_file_to_string(typesysXML_path)
-            cas = CasFactory().buildCASfromStrings(casXMI, typesysXML)
-            self.text_preproc = cas.documentText
+            casXMI = self.__read_file_to_string(file_path)
+            typesysXML = self.__read_file_to_string(typesysXML_path)
 
+            self.cas = CasFactory().buildCASfromStrings(casXMI, typesysXML)
+
+            self.text_preproc = cas.documentText
+            self.text_raw = cas.documentText
             self.language = detect(self.text_preproc) # TODO: why do we get 'en' although 'de'
             self.language = 'de'
-
-            #self.token_df, self.anno_df, self.relation_df = CSVConverter().writeToCSV(cas)
+            self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(cas)
         else:
             if text is not None:
                 self.text_raw=text
             else:
                 self.file_path = file_path
-                self.text_raw = self.__set_text_from_report_file_path(file_path)
+                self.text_raw = self.__read_file_to_string(file_path)
 
             self.text_preproc = self.__preprocess()
             self.language = detect(self.text_preproc)  # TODO: why do we get 'en' although 'de'
             self.language = 'de'
+
+            #TODO @ RITA: change again
             nlp = spacy.load(self.language)
+            #nlp = spacy.load(spacy_model)
+
             self.spacy_doc = nlp( self.text_preproc)
 
             # TODO@RITA: add pos tags, dependency tags output spacy
@@ -69,7 +78,7 @@ class Ubertext:
                 columns=['text', 'beg', 'end', 'is_sent_start', 'id'] )
             self.token_df = self.token_df.append(tmp_token_df, ignore_index=True)
 
-    def build_cas_from_spacy(self, typesystem_filepath):
+    def set_cas_from_spacy(self, typesystem_filepath):
         if self.spacy_doc.is_parsed is False:
             raise ValueError('spaCy doc must be parsed')
 
@@ -109,28 +118,24 @@ class Ubertext:
                 'end': end
             })
             cas.addToIndex(fs_sentence)
-        return cas
+        self.cas = cas
 
-    def add_tnm_prelabel_to_cas(self, cas, rel_pattern_filepath):
+    def add_regex_label_to_cas(self, rel_pattern_filepath):
         abspath = os.path.dirname(__file__)
         path = os.path.join(abspath, rel_pattern_filepath)
         custom_type = 'webanno.custom.Tumor'
         with open(path, 'r') as f:
             pattern_json = json.load(f)
-        vec, match = findpattern(pattern_json['TNM']['all']['regex'], self.text_preproc)
+        vec, match = findpattern(pattern_json['TNM']['TNM']['regex'], self.text_preproc)
         anno = {
             'begin': vec[0][0],
             'end': vec[0][1],
-            pattern_json['TNM']['all']['xmi_property']: pattern_json['TNM']['all']['label']
+            pattern_json['TNM']['TNM']['xmi_property']: pattern_json['TNM']['TNM']['tag_name']
         }
-        fs_custom_annotation = cas.createAnnotation(custom_type, anno)
-        cas.addToIndex(fs_custom_annotation)
-        return cas
-
-    def __set_text_from_report_file_path(self, file_path):
-        with open(file_path, 'r') as f:
-            text_raw = f.read()
-        return text_raw
+        fs_custom_annotation = self.cas.createAnnotation(custom_type, anno)
+        self.cas.addToIndex(fs_custom_annotation)
+        #update internal members
+        self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(self.cas)
 
     def save(self, file_path):
         import bedrock.common
@@ -185,7 +190,7 @@ class Ubertext:
         return text_preproc
 
 
-    def read_file_to_string(self, file_path):
+    def __read_file_to_string(self, file_path):
         with open(file_path) as f:
             s = f.read()
         return s
@@ -204,6 +209,8 @@ class Ubertext:
         t2.to_csv(file_path, sep="\t")
 
 
+
+
 def load_ubertext(file_path):
     import bedrock.common
     return bedrock.common.load_pickle(file_path)
@@ -213,35 +220,39 @@ if __name__ == '__main__':
 
     #file_dir = "/home/achermannr/nlp_local/data/iter1/"
 
-    file_dir = '/home/marko/projects/openmednlp/training_development/'
-    file_name = '2051460_5616.txt'
+    # file_dir = '/home/marko/projects/openmednlp/training_development/'
+    # file_name = '2051460_5616.txt'
     spacy_model = '/home/achermannr/nlp_local/library/de_core_news_sm-2.0.0/de_core_news_sm/de_core_news_sm-2.0.0'
+    #
+    # input_filepath = file_dir + file_name
+    # utxt = Ubertext(input_filepath)
+    # cas = utxt.build_cas_from_spacy('/home/marko/projects/openmednlp/typesystem.xml')
+    # cas = utxt.add_tnm_prelabel_to_cas(cas, "prelabel/patterns.json")
+    # xmi_writer = XmiWriter.XmiWriter()
+    # xmi_writer.write(cas, '/home/marko/test.xmi')
 
-    input_filepath = file_dir + file_name
-    utxt = Ubertext(input_filepath)
-    cas = utxt.build_cas_from_spacy('/home/marko/projects/openmednlp/typesystem.xml')
-    cas = utxt.add_tnm_prelabel_to_cas(cas, "prelabel/patterns.json")
+    ###read from UIMA xmi
+    test_path = "/home/achermannr/nlp_local/data/"
+    file_xmi = test_path + "export/2051460_5616.xmi"
+    file_type_syst = test_path + "export/typesystem.xml"
+    # utx = Ubertext(file_path=file_xmi, typesysXML_path=file_type_syst)
+    # utx.write_csv("/home/achermannr/nlp_local/data/export/xxx")
+
+    file_text = test_path + "test/2092073_9622.txt"
+    utx = Ubertext(file_path=file_text)
+    #utx.write_csv("/home/achermannr/nlp_local/data/export/xxxyyy")
+    utx.set_cas_from_spacy(file_type_syst )
+
+    utx.add_regex_label_to_cas("prelabel/patterns.json")
     xmi_writer = XmiWriter.XmiWriter()
-    xmi_writer.write(cas, '/home/marko/test.xmi')
+    xmi_writer.write(utx.cas, test_path + 'test/test.xmi')
+    utx.write_csv("/home/achermannr/nlp_local/data/export/xxxyyy")
 
-    """
-    test_path = "/home/achermannr/nlp_local/data/export/"
-    file_xmi = test_path + "2051460_5616.xmi"
-    file_type_syst = test_path + "typesystem.xml"
+    # cas = utxt.build_cas_from_spacy('/home/marko/projects/openmednlp/typesystem.xml')
+    # cas = utxt.add_tnm_prelabel_to_cas(cas, "prelabel/patterns.json")
+    # xmi_writer = XmiWriter.XmiWriter()
+    # xmi_writer.write(cas, '/home/marko/test.xmi')
 
-    utx = Ubertext(file_path=file_xmi, typesysXML_path=file_type_syst )
-    utx.write_csv("/home/achermannr/nlp_local/data/export/xxx")
-    """
 
-    #utx.persist_json(file_dir + file_names[i].replace('.txt', '.json'))
 
-        #find last name write table with 3 words before and last
-        #a=utx.token_df['id'][utx.token_df['text'].str.contains('Tumor')].astype(int)
-        #df=pd.DataFrame()
 
-        # for j in range(0,len(a)):
-        #     tmp = utx.token_df['text'][a.iloc[j]-3:a.iloc[j] + 3].to_frame()
-        #     tmp.columns=["a", "b", "c", "d", "e", "f", "g"]
-        #     df=df.append(tmp, ignore_index=True)
-        #
-        # df.to_csv('/home/achermannr/Temp/' + file_names[i] + '.csv', sep="\t")
