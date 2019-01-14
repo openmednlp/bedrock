@@ -145,7 +145,7 @@ class Ubertext:
                     self.cas.addToIndex(fs_custom_annotation)
 
         #update internal members
-        self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(self.cas)
+        uima, self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(self.cas)
 
     def save(self, file_path):
         import bedrock.common
@@ -206,22 +206,7 @@ class Ubertext:
         return s
 
 
-    def write_csv(self, file_path):
-        """ write csv file, one line per token including annotations
 
-            assuming for each token only 1 annotation per feature.class
-        """
-        #TODO replace
-        self.token_df.set_index('token_id')
-
-        if self.anno_df.empty == False:
-            self.anno_df['col_pivot'] = self.anno_df['layer'] + "." + self.anno_df['feature'] + "." + self.anno_df['class']
-            t1 = self.anno_df.pivot(index='token_id', values='class',
-                            columns='col_pivot')
-            t2 = self.token_df.merge(t1, left_on='token_id', right_index=True, how = 'left')
-            t2.to_csv(file_path, sep="\t")
-        else :
-            self.token_df.to_csv(file_path, sep="\t")
 
 def load_ubertext(file_path):
     import bedrock.common
