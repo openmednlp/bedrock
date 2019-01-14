@@ -4,6 +4,7 @@ import spacy
 import html
 import json
 import os
+import numpy as np
 from langdetect import detect
 from bedrock.pycas.cas.core import CAS
 from bedrock.pycas.type.cas import TypeSystemFactory
@@ -13,14 +14,14 @@ from bedrock.pycas.cas.core.CasFactory import CasFactory
 
 
 #to replace for escape with html
+
 from xml.sax.saxutils import quoteattr
 
 from bedrock.pycas.cas.writer.CAStoDf import CAStoDf
 
-#from bedrock.pycas.cas.core import CasFactory
+
 
 class Ubertext:
-
 
     # TODO: wide format, flat  export_flat for ML learning
 
@@ -29,6 +30,9 @@ class Ubertext:
                          file_path to text (raw format)
                          path to UIMA_xmi, typesysXML
                     """
+        #TODO remove
+        spacy_model = '/home/achermannr/nlp_local/library/de_core_news_sm-2.0.0/de_core_news_sm/de_core_news_sm-2.0.0'
+
         print(file_path)
 
         # members to keep tokens, annotations and relations
@@ -66,12 +70,12 @@ class Ubertext:
             self.language = 'de'
 
             #TODO @ RITA: change again
-            nlp = spacy.load(self.language)
-            #nlp = spacy.load(spacy_model)
+            #nlp = spacy.load(self.language)
+            nlp = spacy.load(spacy_model)
 
             self.spacy_doc = nlp( self.text_preproc)
 
-            # TODO@RITA: add pos tags, dependency tags output spacy
+            #TODO@RITA: add pos tags, dependency tags output spacy
             tmp_token_df = pd.DataFrame(
                 [(token.text, token.idx, token.idx + len(token.text), token.is_sent_start, token_id)
                 for token_id, token in enumerate(self.spacy_doc)],
@@ -110,7 +114,7 @@ class Ubertext:
 
         for s in range(0, len(sentence_list)):
             if s < len(sentence_list)-1:
-                end = int(sentence_list['beg'][s+1].astype(int)-1)-1
+                end = int(sentence_list['beg'][s+1].astype(int)-1) #-1
             else:
                 end = doc_len
             fs_sentence = cas.createAnnotation(sentence_type, {
@@ -126,14 +130,20 @@ class Ubertext:
         custom_type = 'webanno.custom.Tumor'
         with open(path, 'r') as f:
             pattern_json = json.load(f)
-        vec, match = findpattern(pattern_json['TNM']['TNM']['regex'], self.text_preproc)
-        anno = {
-            'begin': vec[0][0],
-            'end': vec[0][1],
-            pattern_json['TNM']['TNM']['xmi_property']: pattern_json['TNM']['TNM']['tag_name']
-        }
-        fs_custom_annotation = self.cas.createAnnotation(custom_type, anno)
-        self.cas.addToIndex(fs_custom_annotation)
+
+        for key1, value in pattern_json.items():
+            for key2, value2 in value.items():
+                vec, match = findpattern(str(value2['regex']), self.text_preproc)
+
+                for v in vec:
+                    anno = {
+                        'begin': v[0],
+                        'end': v[1],
+                        value2['xmi_property']: value2['tag_name']
+                    }
+                    fs_custom_annotation = self.cas.createAnnotation(custom_type, anno)
+                    self.cas.addToIndex(fs_custom_annotation)
+
         #update internal members
         self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(self.cas)
 
@@ -197,61 +207,25 @@ class Ubertext:
 
 
     def write_csv(self, file_path):
-        """ write csv file, one line per token includings annotations
+        """ write csv file, one line per token including annotations
 
             assuming for each token only 1 annotation per feature.class
         """
-        self.anno_df['col_pivot'] =  self.anno_df['layer'] + "." + self.anno_df['feature']
+        #TODO replace
         self.token_df.set_index('token_id')
-        t1 = self.anno_df.pivot(index='token_id', values='class' ,
-                            columns='col_pivot' )
-        t2 = self.token_df.merge(t1, left_on='token_id', right_index=True, how = 'left')
-        t2.to_csv(file_path, sep="\t")
 
-
-
+        if self.anno_df.empty == False:
+            self.anno_df['col_pivot'] = self.anno_df['layer'] + "." + self.anno_df['feature'] + "." + self.anno_df['class']
+            t1 = self.anno_df.pivot(index='token_id', values='class',
+                            columns='col_pivot')
+            t2 = self.token_df.merge(t1, left_on='token_id', right_index=True, how = 'left')
+            t2.to_csv(file_path, sep="\t")
+        else :
+            self.token_df.to_csv(file_path, sep="\t")
 
 def load_ubertext(file_path):
     import bedrock.common
     return bedrock.common.load_pickle(file_path)
-
-
-if __name__ == '__main__':
-
-    #file_dir = "/home/achermannr/nlp_local/data/iter1/"
-
-    # file_dir = '/home/marko/projects/openmednlp/training_development/'
-    # file_name = '2051460_5616.txt'
-    spacy_model = '/home/achermannr/nlp_local/library/de_core_news_sm-2.0.0/de_core_news_sm/de_core_news_sm-2.0.0'
-    #
-    # input_filepath = file_dir + file_name
-    # utxt = Ubertext(input_filepath)
-    # cas = utxt.build_cas_from_spacy('/home/marko/projects/openmednlp/typesystem.xml')
-    # cas = utxt.add_tnm_prelabel_to_cas(cas, "prelabel/patterns.json")
-    # xmi_writer = XmiWriter.XmiWriter()
-    # xmi_writer.write(cas, '/home/marko/test.xmi')
-
-    ###read from UIMA xmi
-    test_path = "/home/achermannr/nlp_local/data/"
-    file_xmi = test_path + "export/2051460_5616.xmi"
-    file_type_syst = test_path + "export/typesystem.xml"
-    # utx = Ubertext(file_path=file_xmi, typesysXML_path=file_type_syst)
-    # utx.write_csv("/home/achermannr/nlp_local/data/export/xxx")
-
-    file_text = test_path + "test/2092073_9622.txt"
-    utx = Ubertext(file_path=file_text)
-    #utx.write_csv("/home/achermannr/nlp_local/data/export/xxxyyy")
-    utx.set_cas_from_spacy(file_type_syst )
-
-    utx.add_regex_label_to_cas("prelabel/patterns.json")
-    xmi_writer = XmiWriter.XmiWriter()
-    xmi_writer.write(utx.cas, test_path + 'test/test.xmi')
-    utx.write_csv("/home/achermannr/nlp_local/data/export/xxxyyy")
-
-    # cas = utxt.build_cas_from_spacy('/home/marko/projects/openmednlp/typesystem.xml')
-    # cas = utxt.add_tnm_prelabel_to_cas(cas, "prelabel/patterns.json")
-    # xmi_writer = XmiWriter.XmiWriter()
-    # xmi_writer.write(cas, '/home/marko/test.xmi')
 
 
 
