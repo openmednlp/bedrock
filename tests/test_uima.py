@@ -2,6 +2,7 @@ import unittest
 import os
 import bedrock.uima as ubertx
 from bedrock.pycas.cas.writer import XmiWriter
+from bedrock.pycas.cas.writer.CAStoDf import CAStoDf
 
 class CAStoDF(unittest.TestCase):
 
@@ -20,7 +21,12 @@ class CAStoDF(unittest.TestCase):
             utx.add_regex_label_to_cas("prelabel/patterns.json")
             xmi_writer = XmiWriter.XmiWriter()
             xmi_writer.write(utx.cas, file_output_dir + file_names[file].replace('.txt', '.xmi'))
-            utx.write_csv(file_output_dir + file_names[file].replace('.txt', '.csv'))
+
+            #write to csv
+            uima_df, token_df, anno_df, rel_df = CAStoDf().toDf(utx.cas)
+            uima_df.to_csv(file_output_dir + file_names[file].replace('.xmi', '_uima.csv'), sep="\t", index=False)
+            anno_df.to_csv(file_output_dir + file_names[file].replace('xmi', '_anno.csv'), sep="\t", index=False)
+
             print(file_names[file])
 
 if __name__ == '__main__':
