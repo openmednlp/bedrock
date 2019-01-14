@@ -1,0 +1,144 @@
+begin	end	feature_type	xmi_id	sent_id	token_id	text	Tumor.TNM
+0.0	5.0	Token	2.0	0	0	﻿AJCC	
+6.0	10.0	Token	3.0	0	1	2009	version
+10.0	11.0	Token	4.0	1	2	:	version
+12.0	16.0	Token	5.0	1	3	pT4a	TNM
+16.0	17.0	Token	6.0	1	4	,	TNM
+18.0	21.0	Token	7.0	1	5	pN3	TNM
+22.0	23.0	Token	8.0	1	6	(	
+23.0	26.0	Token	9.0	1	7	1/1	
+27.0	30.0	Token	10.0	1	8	und	
+31.0	52.0	Token	11.0	1	9	In-Transit-Metastasen	
+52.0	53.0	Token	12.0	1	10	)	
+53.0	54.0	Token	13.0	1	11	,	
+55.0	57.0	Token	14.0	1	12	L1	
+57.0	58.0	Token	15.0	1	13	,	
+59.0	61.0	Token	16.0	1	14	V0	
+61.0	62.0	Token	17.0	1	15	,	
+63.0	66.0	Token	18.0	1	16	Pn0	
+66.0	67.0	Token	19.0	1	17	.	
+68.0	71.0	Token	20.0	2	18	pT1	TNM
+71.0	72.0	Token	21.0	2	19	,	TNM
+73.0	76.0	Token	22.0	2	20	pN3	TNM
+77.0	78.0	Token	23.0	2	21	(	
+78.0	90.0	Token	24.0	2	22	linksseitige	
+91.0	102.0	Token	25.0	2	23	Lymphknoten	
+102.0	103.0	Token	26.0	2	24	:	
+104.0	108.0	Token	27.0	2	25	3/30	
+108.0	109.0	Token	28.0	2	26	,	
+110.0	123.0	Token	29.0	2	27	rechtsseitige	
+124.0	135.0	Token	30.0	2	28	Lymphknoten	
+135.0	136.0	Token	31.0	2	29	:	
+137.0	141.0	Token	32.0	2	30	5/39	
+141.0	142.0	Token	33.0	2	31	)	
+142.0	143.0	Token	34.0	2	32	,	
+144.0	146.0	Token	35.0	2	33	L1	
+146.0	147.0	Token	36.0	2	34	,	
+148.0	151.0	Token	37.0	2	35	Pn1	
+151.0	152.0	Token	38.0	2	36	,	
+153.0	155.0	Token	39.0	2	37	V0	
+155.0	156.0	Token	40.0	2	38	,	
+157.0	159.0	Token	41.0	2	39	G3	
+160.0	165.0	Token	42.0	2	40	Tumor	
+166.0	177.0	Token	43.0	2	41	pT1,cN0,cMx	TNM
+178.0	184.0	Token	44.0	2	42	Mässig	
+185.0	200.0	Token	45.0	2	43	differenziertes	
+200.0	201.0	Token	46.0	2	44	,	
+202.0	211.0	Token	47.0	2	45	teilweise	
+212.0	224.0	Token	48.0	2	46	verhornendes	
+225.0	247.0	Token	49.0	2	47	Plattenepithelkarzinom	
+247.0	248.0	Token	50.0	2	48	,	
+249.0	273.0	Token	51.0	2	49	Tumor-Maximaldurchmesser	
+273.0	274.0	Token	52.0	2	50	:	
+275.0	278.0	Token	53.0	3	51	1.9	
+278.0	280.0	Token	54.0	3	52	cm	
+280.0	281.0	Token	55.0	3	53	,	
+282.0	294.0	Token	56.0	4	54	Infiltration	
+295.0	297.0	Token	57.0	4	55	in	
+298.0	301.0	Token	58.0	4	56	die	
+302.0	310.0	Token	59.0	4	57	Subkutis	
+310.0	311.0	Token	60.0	4	58	,	
+312.0	320.0	Token	61.0	4	59	nächster	
+321.0	335.0	Token	62.0	4	60	Resektionsrand	
+336.0	339.0	Token	63.0	4	61	zur	
+340.0	345.0	Token	64.0	4	62	Tiefe	
+345.0	346.0	Token	65.0	4	63	,	
+347.0	350.0	Token	66.0	4	64	ca.	
+351.0	356.0	Token	67.0	4	65	100um	
+356.0	357.0	Token	68.0	4	66	.	
+358.0	361.0	Token	69.0	5	67	pT1	TNM
+361.0	362.0	Token	70.0	5	68	,	TNM
+363.0	365.0	Token	71.0	5	69	G2	
+366.0	369.0	Token	72.0	6	70	Gut	
+370.0	385.0	Token	73.0	6	71	differenziertes	
+386.0	398.0	Token	74.0	6	72	verhornendes	
+399.0	421.0	Token	75.0	6	73	Plattenepithelkarzinom	
+422.0	425.0	Token	76.0	6	74	Typ	
+426.0	440.0	Token	77.0	6	75	Keratoakanthom	
+440.0	441.0	Token	78.0	6	76	,	
+442.0	466.0	Token	79.0	6	77	Tumor-Maximaldurchmesser	
+466.0	467.0	Token	80.0	6	78	:	
+468.0	469.0	Token	81.0	6	79	8	
+469.0	471.0	Token	82.0	6	80	mm	
+471.0	472.0	Token	83.0	6	81	,	
+473.0	481.0	Token	84.0	6	82	allseits	
+482.0	484.0	Token	85.0	6	83	im	
+485.0	493.0	Token	86.0	6	84	Gesunden	
+494.0	503.0	Token	87.0	6	85	reseziert	
+503.0	504.0	Token	88.0	6	86	,	
+505.0	513.0	Token	89.0	6	87	nächster	
+514.0	528.0	Token	90.0	6	88	Resektionsrand	
+529.0	532.0	Token	91.0	6	89	zur	
+533.0	538.0	Token	92.0	6	90	Tiefe	
+538.0	539.0	Token	93.0	6	91	:	
+540.0	543.0	Token	94.0	7	92	2.5	
+543.0	545.0	Token	95.0	7	93	mm	
+545.0	546.0	Token	96.0	8	94	.	
+547.0	550.0	Token	97.0	9	95	pT1	TNM
+550.0	551.0	Token	98.0	9	96	,	TNM
+552.0	554.0	Token	99.0	9	97	G1	
+554.0	555.0	Token	100.0	9	98	,	
+556.0	558.0	Token	101.0	10	99	R0	
+558.0	559.0	Token	102.0	10	100	.	
+560.0	579.0	Token	103.0	11	101	Tumorklassifikation	
+580.0	581.0	Token	104.0	11	102	(	
+581.0	586.0	Token	105.0	11	103	unter	
+587.0	603.0	Token	106.0	11	104	Berücksichtigung	
+604.0	607.0	Token	107.0	11	105	von	
+608.0	619.0	Token	108.0	11	106	B2015.16783	
+619.0	620.0	Token	109.0	11	107	-	
+620.0	625.0	Token	110.0	11	108	16788	
+625.0	626.0	Token	111.0	11	109	)	
+626.0	627.0	Token	112.0	12	110	:	
+628.0	632.0	Token	113.0	13	111	UICC	version
+633.0	636.0	Token	114.0	13	112	TNM	version
+637.0	638.0	Token	115.0	13	113	7	version
+638.0	639.0	Token	116.0	14	114	.	version
+640.0	647.0	Token	117.0	14	115	Auflage	
+647.0	648.0	Token	118.0	14	116	:	
+649.0	653.0	Token	119.0	14	117	pT1b	TNM
+653.0	654.0	Token	120.0	14	118	,	TNM
+655.0	658.0	Token	121.0	14	119	pNx	TNM
+658.0	659.0	Token	122.0	14	120	,	TNM
+660.0	662.0	Token	123.0	14	121	G3	
+662.0	663.0	Token	124.0	14	122	,	
+664.0	666.0	Token	125.0	14	123	V0	
+666.0	667.0	Token	126.0	14	124	,	
+668.0	670.0	Token	127.0	14	125	L0	
+670.0	671.0	Token	128.0	15	126	.	
+672.0	676.0	Token	129.0	16	127	UICC	version
+677.0	680.0	Token	130.0	16	128	TNM	version
+681.0	682.0	Token	131.0	17	129	6	version
+682.0	683.0	Token	132.0	17	130	.	version
+684.0	691.0	Token	133.0	17	131	Auflage	
+691.0	692.0	Token	134.0	17	132	:	
+693.0	696.0	Token	135.0	18	133	pT1	TNM
+696.0	697.0	Token	136.0	18	134	,	TNM
+698.0	701.0	Token	137.0	18	135	pNx	TNM
+701.0	702.0	Token	138.0	18	136	,	TNM
+703.0	705.0	Token	139.0	18	137	G3	
+705.0	706.0	Token	140.0	18	138	,	
+707.0	709.0	Token	141.0	18	139	V0	
+709.0	710.0	Token	142.0	18	140	,	
+711.0	713.0	Token	143.0	18	141	L0	
+713.0	714.0	Token	144.0	18	142	.	

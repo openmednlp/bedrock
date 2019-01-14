@@ -1,0 +1,7 @@
+﻿UICC TNM 7. Auflage: pT1a, pNx, V0, L0.
+Mässig differenziertes Adenokarzinom des Kolon transversum. Maximaler Tumordurchmesser: 7mm. Tumorfreie Resektionsränder. 
+pT1 (Sm3), pN0 (0/8), G2, V0, L0, Pn0.
+Hochdifferenziertes Plattenepithelkarzinom (G1) pT1 nach AJCC 2010.
+
+
+
