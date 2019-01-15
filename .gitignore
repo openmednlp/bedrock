@@ -102,4 +102,6 @@ ENV/
 
 *.csv
 
+# project based
 .idea
+tests/data/output/*
