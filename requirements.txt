@@ -15,3 +15,4 @@ ipdb
 ipython
 tox
 unittest2
+python-dotenv

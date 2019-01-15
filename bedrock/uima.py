@@ -25,13 +25,12 @@ class Ubertext:
 
     # TODO: wide format, flat  export_flat for ML learning
 
-    def __init__(self, file_path=None, typesysXML_path=None, text=None):
+    def __init__(self, spacy_model_path=None, file_path=None, typesysXML_path=None, text=None):
         """ constructor: text (raw format)
                          file_path to text (raw format)
                          path to UIMA_xmi, typesysXML
                     """
         #TODO remove
-        spacy_model = '/home/achermannr/nlp_local/library/de_core_news_sm-2.0.0/de_core_news_sm/de_core_news_sm-2.0.0'
 
         print(file_path)
 
@@ -71,7 +70,7 @@ class Ubertext:
 
             #TODO @ RITA: change again
             #nlp = spacy.load(self.language)
-            nlp = spacy.load(spacy_model)
+            nlp = spacy.load(spacy_model_path)
 
             self.spacy_doc = nlp( self.text_preproc)
 
