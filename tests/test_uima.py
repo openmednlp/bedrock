@@ -7,30 +7,36 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class CAStoDF(unittest.TestCase):
+class TestCAStoDF(unittest.TestCase):
 
-    spacy_model = os.getenv("SPACY_MODEL_PATH")
+    def test_pattern_prelabeling(self):
 
-    file_input_dir = os.getenv("DATA_INPUT_PATH")
-    file_output_dir = os.getenv("DATA_OUTPUT_PATH")
-    file_type_syst = file_input_dir + "typesystem.xml"
-    file_names = [f for f in os.listdir(file_input_dir) if f.endswith('.txt')]
+        spacy_model = os.getenv("SPACY_MODEL_PATH")
 
-    for file in range(0, len(file_names)):
-        with open(file_input_dir + file_names[file], 'r') as f:
-            utx = ubertx.Ubertext(spacy_model, f.name, file_type_syst)
-            utx.set_cas_from_spacy(file_type_syst)
+        file_input_dir = os.getenv("DATA_INPUT_PATH")
+        file_output_dir = os.getenv("DATA_OUTPUT_PATH")
+        file_type_syst = file_input_dir + "typesystem.xml"
+        file_names = [f for f in os.listdir(file_input_dir) if f.endswith('.txt')]
 
-            utx.add_regex_label_to_cas("prelabel/patterns.json")
-            xmi_writer = XmiWriter.XmiWriter()
-            xmi_writer.write(utx.cas, file_output_dir + file_names[file].replace('.txt', '.xmi'))
+        for file in range(0, len(file_names)):
+            with open(file_input_dir + file_names[file], 'r') as f:
+                utx = ubertx.Ubertext(spacy_model, f.name, file_type_syst)
+                utx.set_cas_from_spacy(file_type_syst)
 
-            #write to csv
-            uima_df, token_df, anno_df, rel_df = CAStoDf().toDf(utx.cas)
-            uima_df.to_csv(file_output_dir + file_names[file].replace('.xmi', '_uima.csv'), sep="\t", index=False)
-            anno_df.to_csv(file_output_dir + file_names[file].replace('xmi', '_anno.csv'), sep="\t", index=False)
+                utx.add_regex_label_to_cas("prelabel/patterns.json")
+                xmi_writer = XmiWriter.XmiWriter()
+                xmi_writer.write(utx.cas, file_output_dir + file_names[file].replace('.txt', '.xmi'))
 
-            print(file_names[file])
+                #write to csv
+                uima_df, token_df, anno_df, rel_df = CAStoDf().toDf(utx.cas)
+                uima_df.to_csv(file_output_dir + file_names[file].replace('.xmi', '_uima.csv'), sep="\t", index=False)
+                anno_df.to_csv(file_output_dir + file_names[file].replace('xmi', '_anno.csv'), sep="\t", index=False)
+
+                print(file_names[file])
+
+    def test_dictionary_prelabeling(self):
+        print("TEST 2")
+
 
 if __name__ == '__main__':
     unittest.main()

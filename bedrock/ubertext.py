@@ -4,13 +4,12 @@ import spacy
 import html
 import json
 import os
-import numpy as np
 from langdetect import detect
 from bedrock.pycas.cas.core import CAS
 from bedrock.pycas.type.cas import TypeSystemFactory
-from bedrock.pycas.cas.writer import XmiWriter
 from bedrock.prelabel.findpattern import findpattern
 from bedrock.pycas.cas.core.CasFactory import CasFactory
+
 
 
 #to replace for escape with html
@@ -145,6 +144,11 @@ class Ubertext:
 
         #update internal members
         uima, self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(self.cas)
+
+    def add_dictionary_label_to_cas(self, dictionary_path):
+        # start with an naïve approach
+
+        print(dictionary_path)
 
     def save(self, file_path):
         import bedrock.common
