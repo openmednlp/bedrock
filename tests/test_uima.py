@@ -1,6 +1,6 @@
 import unittest
 import os
-import bedrock.uima as ubertx
+import bedrock.ubertext as ubertx
 from bedrock.pycas.cas.writer import XmiWriter
 from bedrock.pycas.cas.writer.CAStoDf import CAStoDf
 from dotenv import load_dotenv
