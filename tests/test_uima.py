@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class TestCAStoDF(unittest.TestCase):
-
+    @unittest.skip("implementing other feature")
     def test_pattern_prelabeling(self):
 
         spacy_model = os.getenv("SPACY_MODEL_PATH")
@@ -35,8 +35,21 @@ class TestCAStoDF(unittest.TestCase):
                 print(file_names[file])
 
     def test_dictionary_prelabeling(self):
-        print("TEST 2")
+        spacy_model = os.getenv("SPACY_MODEL_PATH")
+        icd_o_def_path = os.getenv("ICD_O_FILE_PATH")
+        file_input_dir = os.getenv("DATA_INPUT_PATH")
+        file_output_dir = os.getenv("DATA_OUTPUT_PATH")
+        file_type_syst = file_input_dir + "typesystem.xml"
+        file_names = [f for f in os.listdir(file_input_dir) if f.endswith('.txt')]
 
+        for file in range(0, len(file_names)):
+            with open(file_input_dir + file_names[file], 'r') as f:
+                utx = ubertx.Ubertext(spacy_model, f.name, file_type_syst)
+                utx.set_cas_from_spacy(file_type_syst)
+
+                utx.add_dictionary_label_to_cas(icd_o_def_path)
+
+                print(file_names[file])
 
 if __name__ == '__main__':
     unittest.main()

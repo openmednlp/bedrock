@@ -16,3 +16,5 @@ ipython
 tox
 unittest2
 python-dotenv
+fuzzywuzzy
+python-Levenshtein

@@ -1015,6 +1015,11 @@
                     <description/>
                     <rangeTypeName>uima.cas.String</rangeTypeName>
                 </featureDescription>
+                 <featureDescription>
+                    <name>Morphology</name>
+                    <description/>
+                    <rangeTypeName>uima.cas.String</rangeTypeName>
+                </featureDescription>
                 <featureDescription>
                     <name>bAttributes</name>
                     <description/>

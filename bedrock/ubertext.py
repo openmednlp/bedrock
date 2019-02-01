@@ -9,7 +9,9 @@ from bedrock.pycas.cas.core import CAS
 from bedrock.pycas.type.cas import TypeSystemFactory
 from bedrock.prelabel.findpattern import findpattern
 from bedrock.pycas.cas.core.CasFactory import CasFactory
-
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
+from fuzzysearch import find_near_matches
 
 
 #to replace for escape with html
@@ -145,10 +147,33 @@ class Ubertext:
         #update internal members
         uima, self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(self.cas)
 
-    def add_dictionary_label_to_cas(self, dictionary_path):
-        # start with an naïve approach
+    def add_dictionary_label_to_cas(self, icd_o_definition_file_path):
+        # start with an naïve approach with fuzzy token_set
+        dictionary = pd.read_csv(icd_o_definition_file_path, sep='\t')
+        dictionary = dictionary[dictionary['languageCode'] == 'de']
+        dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
 
-        print(dictionary_path)
+        for sent in self.spacy_doc.sents:
+            self.__fuzzy_extract(sent, dictionary['term'], dictionary['referencedComponentId'], 86, len(sent))
+
+    def __fuzzy_extract(self, sent, queries, codes, threshold, limit):
+        '''fuzzy matches 'qs' in 'ls' and returns list of
+        tuples of (word,index)
+        '''
+        custom_type = 'webanno.custom.Tumor'
+        for word, _, _ in process.extractBests(sent.text, queries, scorer=fuzz.token_set_ratio, score_cutoff=threshold, limit=limit):
+            matches = find_near_matches(word, sent.text, max_l_dist=2)
+            index = queries[queries == word].index[0]
+            code = codes[index]
+            for match in matches:
+                dada = word[match.start:match.end]
+                anno = {
+                    'begin': sent.start_char + match.start,
+                    'end': sent.end_char + match.end,
+                    'Morphology': code
+                }
+                fs_custom_annotation = self.cas.createAnnotation(custom_type, anno)
+                self.cas.addToIndex(fs_custom_annotation)
 
     def save(self, file_path):
         import bedrock.common
