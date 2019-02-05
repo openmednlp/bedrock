@@ -1,7 +1,9 @@
 import re as re
 import pandas as pd
 import spacy
-import html
+from xml.sax import saxutils
+
+
 import json
 import os
 from langdetect import detect
@@ -12,9 +14,6 @@ from bedrock.pycas.cas.core.CasFactory import CasFactory
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from fuzzysearch import find_near_matches
-
-
-#to replace for escape with html
 
 from xml.sax.saxutils import quoteattr
 
@@ -27,13 +26,6 @@ class Ubertext:
     # TODO: wide format, flat  export_flat for ML learning
 
     def __init__(self, spacy_model_path=None, file_path=None, typesysXML_path=None, text=None):
-        """ constructor: text (raw format)
-                         file_path to text (raw format)
-                         path to UIMA_xmi, typesysXML
-                    """
-        #TODO remove
-
-        print(file_path)
 
         # members to keep tokens, annotations and relations
         self.token_df = pd.DataFrame(columns=['doc_id',  'sent_id', 'token_id', 'text', 'begin', 'end',
@@ -53,11 +45,11 @@ class Ubertext:
 
             self.cas = CasFactory().buildCASfromStrings(casXMI, typesysXML)
 
-            self.text_preproc = cas.documentText
-            self.text_raw = cas.documentText
+            self.text_preproc = self.cas.documentText
+            self.text_raw = self.cas.documentText
             self.language = detect(self.text_preproc) # TODO: why do we get 'en' although 'de'
             self.language = 'de'
-            self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(cas)
+            self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(self.cas)
         else:
             if text is not None:
                 self.text_raw=text
@@ -72,15 +64,19 @@ class Ubertext:
             #TODO @ RITA: change again
             #nlp = spacy.load(self.language)
             nlp = spacy.load(spacy_model_path)
+            nlp.add_pipe(self.set_custom_boundaries, before='parser')
 
             self.spacy_doc = nlp( self.text_preproc)
 
             #TODO@RITA: add pos tags, dependency tags output spacy
             tmp_token_df = pd.DataFrame(
-                [(token.text, token.idx, token.idx + len(token.text), token.is_sent_start, token_id)
+                [(token.text, token.idx, token.idx + len(token.text),
+                  token.is_sent_start, token.pos_,token.dep_, token_id,
+                 #"{0}-{1}".format(token.ent_iob_, token.ent_type_) if token.ent_iob_ != 'O' else token.ent_iob_,
+                  token.head.i)
                 for token_id, token in enumerate(self.spacy_doc)],
-                columns=['text', 'beg', 'end', 'is_sent_start', 'id'] )
-            self.token_df = self.token_df.append(tmp_token_df, ignore_index=True)
+                columns=['text', 'beg', 'end', 'is_sent_start', 'pos', 'dep', 'id', 'gov_id'])
+            self.token_df = self.token_df.append(tmp_token_df, ignore_index = True)
 
     def set_cas_from_spacy(self, typesystem_filepath):
         if self.spacy_doc.is_parsed is False:
@@ -95,6 +91,9 @@ class Ubertext:
 
         sentence_type = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence'
         token_type = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token'
+        pos_type = 'de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS'
+        dependency_type = 'de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency'
+        flavor_tag = "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency"
 
         doc_len = len(self.text_preproc)
 
@@ -109,6 +108,28 @@ class Ubertext:
                 'end': int(token_df_out['end'][t])
             })
             cas.addToIndex(fs_token)
+
+            fs_anno = cas.createAnnotation(pos_type, {
+                'begin': int(token_df_out['beg'][t]),
+                'end': int(token_df_out['end'][t]),
+                'PosValue': token_df_out['pos'][t]
+            })
+            cas.addToIndex(fs_anno)
+
+            #TODO add dependencies to cas
+            '''
+            aFeature = Feature('de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency', 'DependencyType')
+            aFeature.listval =  {'Governor': token_df_out['gov_id'][t],
+                                'Dependent': token_df_out['id'][t],
+                                'DependencyType': token_df_out['dep'][t],
+                                'flavor': 'basic'}
+            fs_dep = cas.createAnnotation(dependency_type, {
+                'begin': int(token_df_out['beg'][t]),
+                'end': int(token_df_out['end'][t])},
+                 aFeature
+            )
+            cas.addToIndex(fs_dep)
+            '''
             if token_df_out['is_sent_start'][t] is True or t == 0:
                 sentence_list = sentence_list.append(token_df_out.iloc[t], ignore_index=True)
 
@@ -145,7 +166,7 @@ class Ubertext:
                     self.cas.addToIndex(fs_custom_annotation)
 
         #update internal members
-        uima, self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(self.cas)
+        # uima, self.token_df, self.anno_df, self.relation_df = CAStoDf().toDf(self.cas)
 
     def add_dictionary_label_to_cas(self, icd_o_definition_file_path):
         # start with an naïve approach with fuzzy token_set
@@ -224,7 +245,7 @@ class Ubertext:
         text_preproc = text_preproc.replace("\n", " ")
         text_preproc = text_preproc.replace("<br>", "\n")
         text_preproc = ' '.join(filter(len, text_preproc.split(' ')))
-        text_preproc = html.unescape(text_preproc)
+        text_preproc = saxutils.unescape(text_preproc)
         return text_preproc
 
 
@@ -233,7 +254,11 @@ class Ubertext:
             s = f.read()
         return s
 
-
+    def set_custom_boundaries(self, doc):
+        for token in doc[:-1]:
+            if token.text == ':':
+                doc[token.i + 1].is_sent_start = False
+        return doc
 
 
 def load_ubertext(file_path):
