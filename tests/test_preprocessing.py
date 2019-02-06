@@ -10,19 +10,21 @@ from bedrock.preprocessing import PreprocessingEngine
 
 load_dotenv()
 
+
 class TestPreprocessing(unittest.TestCase):
 
-    def test_preprocessing(self):
-        file_input_dir = os.getenv("DATA_INPUT_PATH")
-        file_output_dir = os.getenv("DATA_OUTPUT_PATH")
-        file_type_syst = file_input_dir + "typesystem.xml"
-        file_names = [f for f in os.listdir(file_input_dir) if f.endswith('.txt')]
+    def test_preprocessing_from_text(self):
+        input_dir_path = os.getenv("DATA_INPUT_PATH")
+        output_dir_path = os.getenv("DATA_OUTPUT_PATH")
+        typesystem_filepath = input_dir_path + "typesystem.xml"
+
+        file_names = [f for f in os.listdir(input_dir_path) if f.endswith('.txt')]
 
         docs = list()
         for i in range(0, len(file_names)):
-            with open(file_input_dir + file_names[i], 'r') as f:
+            with open(input_dir_path + file_names[i], 'r') as f:
                 file_text = f.read()
-                doc = DocFactory.create_doc_from_text(file_text) # todo set file name in doc
+                doc = DocFactory.create_doc_from_text(file_text, file_names[i])
                 docs.append(doc)
 
         spacy_tagger = SpacyTagger(os.getenv("SPACY_MODEL_PATH"))
@@ -39,11 +41,11 @@ class TestPreprocessing(unittest.TestCase):
         for idx, doc in enumerate(docs):
             relative_filepath_split = file_names[idx].split('/')
             filename = relative_filepath_split[len(relative_filepath_split)-1].split('.')
-            doc.write_xmi(''.join([file_output_dir, filename[0], '_from_', filename[1] ,'.xmi']), file_type_syst)
+            doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
             # #write to csv
             # uima_df, token_df, anno_df, rel_df = CAStoDf().toDf(utx.cas)
-            # uima_df.to_csv(file_output_dir + file_names[file].replace('.xmi', '_uima.csv'), sep="\t", index=False)
-            # anno_df.to_csv(file_output_dir + file_names[file].replace('xmi', '_anno.csv'), sep="\t", index=False)
+            # uima_df.to_csv(output_dir_path + file_names[file].replace('.xmi', '_uima.csv'), sep="\t", index=False)
+            # anno_df.to_csv(output_dir_path + file_names[file].replace('xmi', '_anno.csv'), sep="\t", index=False)
 
 
 if __name__ == '__main__':

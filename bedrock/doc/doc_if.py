@@ -13,6 +13,8 @@ class Doc(ABC):
 
         self._text = ""
 
+        self._filename = ""
+
         columns = ['doc_id', 'sofa_id', 'token_id', 'beg', 'end', 'layer', 'feature', 'class', 'origin']
         self._annotations = pd.DataFrame(columns=columns)
 
@@ -22,12 +24,17 @@ class Doc(ABC):
         columns = ['doc_id', 'sofa_id', 'gov_anno_id', 'dep_anno_id', 'layer', 'role', 'origin']
         self._relations = pd.DataFrame(columns=columns)
 
-
     def set_text(self, text:str):
         self._text = text
 
     def get_text(self) -> str:
         return self._text
+
+    def set_filename(self, filename:str):
+        self._filename = filename
+
+    def get_filename(self):
+        return self._filename
 
     def set_annotations(self, annotations:pd.DataFrame):
         self._annotations = annotations

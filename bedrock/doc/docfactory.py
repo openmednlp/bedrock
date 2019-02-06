@@ -5,18 +5,20 @@ from bedrock.pycas.cas.writer.CAStoDf import CAStoDf
 
 
 class DocFactory:
+
     @staticmethod
-    def create_doc_from_text(text: str) -> Doc:
+    def create_doc_from_text(text: str, filename: str) -> Doc:
         doc = Doc()
-        doc.set_text(DocFactory.__preprocess(text))
+        doc.set_filename(filename)
+        doc.set_text(DocFactory.__preprocess(text)) # TODO shouldn't we pass text to the constructor??
         return doc
 
     @staticmethod
-    def create_doc_from_xmi(xmi_content: str, type_content: str) -> Doc:
-
+    def create_doc_from_xmi(xmi_content: str, type_content: str, xmi_filename: str) -> Doc:
         doc = Doc()
+        doc.set_filename(xmi_filename)
         cas = CasFactory().buildCASfromStrings(xmi_content, type_content)
-        tokens, annotations, relations = CAStoDf().toDf(cas)
+        tokens, annotations, relations = CAStoDf().toDf(cas) # TODO CAStoDF has to be refactored !
         doc.set_text(cas.documentText)
         doc.set_tokens(tokens)
         doc.set_annotations(annotations)
