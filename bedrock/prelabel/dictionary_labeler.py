@@ -17,18 +17,18 @@ class DictionaryLabeler(Labeler):
         labels = pd.DataFrame(columns=columns)
 
         annotations = doc.get_annotations()
-        sentences = annotations[annotations['feature'] == 'Sentence']
+        sentences = annotations[annotations['feature'] == 'sentence']
         if sentences.empty:
             raise Exception('No sentences available')
 
-        queries = self.dictionary['term']
+        queries = self._dictionary['term']
         codes = self._dictionary['referencedComponentId']
 
         for index, sentence in sentences.iterrows():
 
-            text = sentence['text']
             begin = sentence['beg']
             end = sentence['end']
+            text = doc.get_text()[begin:end]
 
             for word, _, _ in process.extractBests(text, queries, scorer=fuzz.token_set_ratio, score_cutoff=86, limit=len(text)):
                 matches = find_near_matches(word, text, max_l_dist=2)

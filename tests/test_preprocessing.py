@@ -5,6 +5,7 @@ from bedrock.prelabel.regex_labeler import RegexLabeler
 from bedrock.prelabel.dictionary_labeler import DictionaryLabeler
 from bedrock.tagger.spacy_tagger import SpacyTagger
 from dotenv import load_dotenv
+import pandas as pd
 import json
 from bedrock.preprocessing import PreprocessingEngine
 
@@ -29,13 +30,18 @@ class TestPreprocessing(unittest.TestCase):
 
         spacy_tagger = SpacyTagger(os.getenv("SPACY_MODEL_PATH"))
 
+        # initialize regex labeler
         with open(os.getenv("TNM_PATTERNS"), 'r') as f:
             tnm_regex_patterns = json.loads(f.read())
-
         regex_labeler = RegexLabeler(tnm_regex_patterns)
-        # dict_labeler = DictionaryLabeler(os.getenv("DICTIONARY_PATH")) # todo uncomment
 
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_labeler])
+        # initialize dictionary labeler
+        dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
+        dictionary = dictionary[dictionary['languageCode'] == 'de']
+        dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
+        dict_labeler = DictionaryLabeler(dictionary)
+
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_labeler, dict_labeler])
         preprocessing_engine.preprocess(docs)
 
         for idx, doc in enumerate(docs):
