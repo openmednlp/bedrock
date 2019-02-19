@@ -1,4 +1,4 @@
-from bedrock.doc.doc_if import Doc
+from bedrock.doc.doc import Doc
 from typing import List
 from bedrock.tagger.tagger_if import Tagger
 from bedrock.prelabel.labeler_if import Labeler
@@ -18,7 +18,6 @@ class PreprocessingEngine:
             doc.set_relations(relations)
 
     def __set_labels(self, docs: List[Doc]):
-
         for doc in docs:
             for labeler in self.labelers:
                 doc.append_annotions(labeler.get_labels(doc))

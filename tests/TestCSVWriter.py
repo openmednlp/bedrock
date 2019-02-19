@@ -1,6 +1,6 @@
 import unittest2 as unittest
 
-from bedrock.pycas.cas.writer.CSVWriter import CSVWriter
+from bedrock.utils.CSVWriter import CSVWriter
 from pycas.cas.core.CasFactory import CasFactory
 
 

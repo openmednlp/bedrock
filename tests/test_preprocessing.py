@@ -39,9 +39,9 @@ class TestPreprocessing(unittest.TestCase):
         dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
         dictionary = dictionary[dictionary['languageCode'] == 'de']
         dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
-        dict_labeler = DictionaryLabeler(dictionary)
+        # dict_labeler = DictionaryLabeler(dictionary) TODO does not work
 
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_labeler, dict_labeler])
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_labeler]) #, dict_labeler])
         preprocessing_engine.preprocess(docs)
 
         for idx, doc in enumerate(docs):

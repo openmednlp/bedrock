@@ -56,6 +56,10 @@ class TOP(FeatureStructure,TypeDescription):
                     self.setListValue(theFeature, theFeature.rangeType,valuelist)    
                 #if range type is non primitive CAS type means Top type        
                 else:
+                    print(type(theFeature.rangeType))
+                    print(theFeature.rangeType)
+                    print("prop_name:" + propertyName + "   range_type: " + str(theFeature.rangeType))
+                    print(CAS_Type.TYPE_NAME_STRING)
                     #expected that user will send a value of FS with same type as feature specified in type system
                     #if its a single value convert to list of FS
                     #so for single value FS user don't have to supply a list of FS, and don't have to care if the type is rangeType

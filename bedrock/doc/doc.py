@@ -1,42 +1,43 @@
-from abc import ABC, abstractmethod
 import pandas as pd
 from bedrock.pycas.type.cas import TypeSystemFactory
 from bedrock.pycas.cas.core import CAS
 from bedrock.pycas.cas.writer import XmiWriter
+from bedrock.utils import uima
 
 
-class Doc(ABC):
+class Doc:
 
     def __init__(self):
 
         # TODO add uid, report_type, date, patient_number
+        # TODO improvment by passing filename and text to constructor
 
         self._text = ""
-
         self._filename = ""
 
-        columns = ['doc_id', 'sofa_id', 'token_id', 'beg', 'end', 'layer', 'feature', 'class', 'origin']
-        self._annotations = pd.DataFrame(columns=columns)
+        # TODO define using :
+        # columns = ['layer', 'feature', 'feature_value', 'origin']
+        # self._annotations = pd.DataFrame(columns=columns)
+        #
+        # columns = ['sent_id', 'token_id', 'text', 'beg', 'end', 'is_sent_start', 'pos', 'dep', 'origin']
+        # self._tokens = pd.DataFrame(columns=columns)
+        #
+        # columns = ['doc_id', 'sofa_id', 'gov_anno_id', 'dep_anno_id', 'layer', 'role', 'origin']
+        # self._relations = pd.DataFrame(columns=columns)
 
-        columns = ['doc_id', 'sent_id', 'token_id', 'text', 'beg', 'end', 'is_sent_start', 'pos', 'dep', 'origin']
-        self._tokens = pd.DataFrame(columns=columns)
-
-        columns = ['doc_id', 'sofa_id', 'gov_anno_id', 'dep_anno_id', 'layer', 'role', 'origin']
-        self._relations = pd.DataFrame(columns=columns)
-
-    def set_text(self, text:str):
+    def set_text(self, text: str):
         self._text = text
 
     def get_text(self) -> str:
         return self._text
 
-    def set_filename(self, filename:str):
+    def set_filename(self, filename: str):
         self._filename = filename
 
     def get_filename(self):
         return self._filename
 
-    def set_annotations(self, annotations:pd.DataFrame):
+    def set_annotations(self, annotations: pd.DataFrame):
         self._annotations = annotations
 
     def get_annotations(self) -> pd.DataFrame:
@@ -45,13 +46,13 @@ class Doc(ABC):
     def append_annotions(self, annotations: pd.DataFrame):
         self._annotations = self._annotations.append(annotations)
 
-    def set_tokens(self, tokens:pd.DataFrame):
+    def set_tokens(self, tokens: pd.DataFrame):
         self._tokens = tokens
 
     def get_tokens(self) -> pd.DataFrame:
         return self._tokens
 
-    def set_relations(self, relations:pd.DataFrame):
+    def set_relations(self, relations: pd.DataFrame):
         self._relations = relations
 
     def get_relations(self) -> pd.DataFrame:
@@ -85,14 +86,6 @@ class Doc(ABC):
         cas.documentText = self.get_text()
         cas.sofaMimeType = 'text'
 
-        sentence_type = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence'
-        token_type = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token'
-        pos_type = 'de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS'
-        # TODO: add dependencies to cas file
-        # dependency_type = 'de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency'
-        # flavor_tag = 'de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency'
-        custom_type = 'webanno.custom.Tumor'
-
         # iterate over annotations
         for _, annotation in self._annotations.iterrows():
 
@@ -101,33 +94,47 @@ class Doc(ABC):
 
             # add an token annotation
             if layer == 'token':
-                fs_anno = cas.createAnnotation(token_type, {
-                    'begin': int(annotation['beg']),
+                fs_anno = cas.createAnnotation(uima.StandardTypeNames.TOKEN, {
+                    'begin': int(annotation['begin']),
                     'end': int(annotation['end'])
-
-                })
+                }, int(annotation['id']))
             elif layer == 'pos':
-                fs_anno = cas.createAnnotation(pos_type, {
-                    'begin': int(annotation['beg']),
+                fs_anno = cas.createAnnotation(uima.StandardTypeNames.POS, {
+                    'begin': int(annotation['begin']),
                     'end': int(annotation['end']),
-                    'PosValue': annotation['class']
+                    uima.PosFeatureNames.POS_VALUE: annotation['feature_value']
                 })
-            elif layer.startswith('custom') :
-                fs_anno = cas.createAnnotation(custom_type,{
-                    'begin':  int(annotation['beg']),
+            elif layer.startswith('custom'):  # TODO unclear
+                fs_anno = cas.createAnnotation(uima.CustomTypeNames.TUMOR, {
+                    'begin':  int(annotation['begin']),
                     'end': int(annotation['end']),
-                    annotation['feature']: annotation['class']
+                    annotation['feature']: annotation['feature_value']
                 })
             elif layer == 'sentence':
-                fs_anno = cas.createAnnotation(sentence_type, {
-                    'begin': int(annotation['beg']),
+                fs_anno = cas.createAnnotation(uima.StandardTypeNames.SENTENCE, {
+                    'begin': int(annotation['begin']),
                     'end': int(annotation['end'])
                 })
             else:
-                print(str(annotation['sofa_id']) + ' unknown annotation')
+                print(str(annotation) + ' unknown annotation')
 
             if fs_anno is not None:
                 cas.addToIndex(fs_anno)
+
+        for _, relation in self._relations.iterrows():
+
+            if relation['layer'] == 'dependency':
+                print(relation['feature_value'])
+                print(type(relation['feature_value']))
+                fs_anno = cas.createAnnotation(uima.StandardTypeNames.DEPENDENCY, {
+                    'begin': int(relation['begin']),
+                    'end': int(relation['end']),
+                    uima.DependencyFeatureNames.GOVERNOR: int(relation['governor_id']),
+                    uima.DependencyFeatureNames.DEPENDENT: int(relation['dependent_id']),
+                    uima.DependencyFeatureNames.DEPENDENCY_TYPE: relation['feature_value']
+                })
+                cas.addToIndex(fs_anno)
+
 
         # TODO add dependencies to cas
         # < dependency: Dependency
