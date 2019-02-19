@@ -1,13 +1,14 @@
 import unittest
 import os
 from bedrock.doc.docfactory import DocFactory
-from bedrock.prelabel.regex_labeler import RegexLabeler
-from bedrock.prelabel.dictionary_labeler import DictionaryLabeler
+from bedrock.prelabel.regex_annotator import RegexAnnotator
+from bedrock.prelabel.dictionary_tree_annotator import DictionaryTreeLabeler
 from bedrock.tagger.spacy_tagger import SpacyTagger
 from dotenv import load_dotenv
 import pandas as pd
 import json
 from bedrock.preprocessing import PreprocessingEngine
+import time
 
 load_dotenv()
 
@@ -23,7 +24,7 @@ class TestPreprocessing(unittest.TestCase):
 
         docs = list()
         for i in range(0, len(file_names)):
-            with open(input_dir_path + file_names[i], 'r') as f:
+            with open(input_dir_path + file_names[i], 'r', encoding='utf-8') as f:
                 file_text = f.read()
                 doc = DocFactory.create_doc_from_text(file_text, file_names[i])
                 docs.append(doc)
@@ -33,16 +34,17 @@ class TestPreprocessing(unittest.TestCase):
         # initialize regex labeler
         with open(os.getenv("TNM_PATTERNS"), 'r') as f:
             tnm_regex_patterns = json.loads(f.read())
-        regex_labeler = RegexLabeler(tnm_regex_patterns)
+        regex_labeler = RegexAnnotator(tnm_regex_patterns)
 
         # initialize dictionary labeler
         dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
         dictionary = dictionary[dictionary['languageCode'] == 'de']
         dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
-        dict_labeler = DictionaryLabeler(dictionary)
+        dictionary_labeler = DictionaryTreeLabeler(dictionary['term'].tolist(),  dictionary['referencedComponentId'].tolist(), 'fuzzy-dictionary-tree-labeler')
 
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_labeler, dict_labeler])
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [dictionary_labeler])
         preprocessing_engine.preprocess(docs)
+
 
         for idx, doc in enumerate(docs):
             relative_filepath_split = file_names[idx].split('/')
