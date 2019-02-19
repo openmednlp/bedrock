@@ -20,10 +20,11 @@ class Node:
         self._stemmed_children[len(self._children)] = node.get_term()
         self._children.append(node)
 
-    def add_class(self, text: str):
+    def add_class(self, class_code: str, feature: str):
         # avoid duplicates
-        if text not in self._classes:
-            self._classes.append(text)
+        class_object = {'class': class_code, 'feature': feature}
+        if class_object not in self._classes:
+            self._classes.append(class_object)
 
     def get_term(self):
         return self._term
@@ -65,12 +66,15 @@ class Node:
 
 class DictionaryTreeLabeler(Annotator):
 
-    def __init__(self, terms: List[str], classes: List[str], origin: str):
+    def __init__(self, terms: List[str], classes: List[str], features: List[str], origin: str):
+        if len(terms) != len(classes) or len(classes) != len(features):
+            raise Exception('Lengths of terms, classes and features vary.')
         self._origin = origin
         self._data = pd.DataFrame(
             {
                 'term': terms,
-                'class': classes
+                'class': classes,
+                'feature': features
             }
         )
         self._classes = classes
@@ -126,7 +130,7 @@ class DictionaryTreeLabeler(Annotator):
                     # if all terms are added to the tree the hole term is on the tree, so mark the current
                     # node with the class
                     if not_added == 0:
-                        current_tree.add_class(row['class'])
+                        current_tree.add_class(row['class'], row['feature'])
 
         # self._tree.print()
 
@@ -143,6 +147,9 @@ class DictionaryTreeLabeler(Annotator):
         t = t.apply(lambda x: list(map(lambda a: {'term': a, 'added': False}, x)))
         data['split'] = t
         data['length'] = data['split'].apply(lambda x: len(x))
+
+    def __token_sorting_key(self, token):
+        return token['beg']
 
     def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
 
@@ -174,13 +181,14 @@ class DictionaryTreeLabeler(Annotator):
                 if current_node['tree'].get_classes():
                     for current_class in current_node['tree'].get_classes():
                         last_id = None
+                        current_path.sort(key=self.__token_sorting_key)
                         for idx, token in enumerate(current_path):
                             new_annotations = new_annotations.append({
                                 'beg': token['beg'],
                                 'end': token['end'],
                                 'layer': 'custom',
-                                'feature': 'Morphology',
-                                'class': current_class,
+                                'feature': current_class['feature'],
+                                'class': current_class['class'],
                                 'origin': self._origin,
                                 'sofa_id': 0  # TODO sofa_id??
                             }, ignore_index=True)
