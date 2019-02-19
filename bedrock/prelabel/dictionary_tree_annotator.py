@@ -198,20 +198,10 @@ class DictionaryTreeLabeler(Annotator):
                             last_id = idx
 
                 for sentence_index, sentence_token_row in sentence_tokens.iterrows():
-                    if sentence_token_row['text'] == 'transversum':
-                        print('------------------------')
-                        print('found')
-                        print('path', current_path)
-                        print(current_node['tree'].get_stemmed_children())
                     text = self._stemmer.stem(sentence_token_row['text'])
                     min_score_cutoff = 100 if len(text) < 4 else 80
                     match = process.extractOne(text, current_node['tree'].get_stemmed_children(),
                                                score_cutoff=min_score_cutoff - 1)
-                    if sentence_token_row['text'] == 'transversum':
-                        print('min_score', min_score_cutoff)
-                        print('match', match)
-                        if match is None:
-                            print('transversum is none')
                     if match is None:
                         continue
 
@@ -221,5 +211,4 @@ class DictionaryTreeLabeler(Annotator):
                     match_index = match[2]
                     nodes_to_visit.append({'tree': current_node['tree'].get_children()[match_index], 'path': path})
 
-        print(new_annotations, new_relations)
         return new_annotations, new_relations
