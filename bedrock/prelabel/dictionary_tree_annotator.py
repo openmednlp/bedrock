@@ -1,5 +1,5 @@
 from bedrock.prelabel.annotator_if import Annotator
-from bedrock.doc.doc_if import Doc
+from bedrock.doc.doc import Doc
 from typing import List
 from functools import reduce
 import pandas as pd
@@ -154,10 +154,10 @@ class DictionaryTreeLabeler(Annotator):
     def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
 
         annotations = doc.get_annotations()
-        sentences = annotations[annotations['feature'] == 'sentence']
+        sentences = annotations[annotations['layer'] == 'sentence']
 
-        new_annotations = pd.DataFrame(columns=['beg', 'end', 'layer', 'feature', 'class', 'origin'])
-        new_relations = pd.DataFrame(columns=['gov_anno_id', 'dep_anno_id', 'beg', 'end', 'layer', 'role', 'origin'])
+        new_annotations = pd.DataFrame(columns=['begin', 'end', 'layer', 'feature', 'feature_value'])
+        new_relations = pd.DataFrame(columns=['governor_id', 'dependent_id', 'begin', 'end', 'layer'])
 
         if sentences.empty:
             raise Exception('No sentences available')
@@ -166,7 +166,7 @@ class DictionaryTreeLabeler(Annotator):
 
             begin = sentence['beg']
             end = sentence['end']
-            sentence_tokens = doc.get_tokens()[(doc.get_tokens()['beg'] >= begin) & (doc.get_tokens()['end'] <= end) & (doc.get_tokens()['pos'] != 'PUNCT')]
+            sentence_tokens = doc.get_tokens()[(doc.get_tokens()['begin'] >= begin) & (doc.get_tokens()['end'] <= end) & (doc.get_tokens()['pos_value'] != 'PUNCT')]
 
             nodes_to_visit = list()
             nodes_to_visit.append({'tree': self._tree, 'path': None})
@@ -184,23 +184,19 @@ class DictionaryTreeLabeler(Annotator):
                         current_path.sort(key=self.__token_sorting_key)
                         for idx, token in enumerate(current_path):
                             new_annotations = new_annotations.append({
-                                'beg': token['beg'],
+                                'begin': token['begin'],
                                 'end': token['end'],
                                 'layer': 'custom',
                                 'feature': current_class['feature'],
-                                'class': current_class['class'],
-                                'origin': self._origin,
-                                'sofa_id': 0  # TODO sofa_id??
+                                'feature_value': current_class['class']
                             }, ignore_index=True)
                             if len(current_path) > 1 and idx > 0:
                                 new_relations = new_relations.append({
-                                    'gov_anno_id': idx,
-                                    'dep_anno_id': last_id,
-                                    'beg': token['beg'],
+                                    'governant_id': idx,
+                                    'dependent_id': last_id,
+                                    'begin': token['begin'],
                                     'end': token['end'],
-                                    'layer': 'custom',
-                                    'role': 'any_role',
-                                    'origin': self._origin
+                                    'layer': 'custom'
                                 }, ignore_index=True)
 
                             last_id = idx

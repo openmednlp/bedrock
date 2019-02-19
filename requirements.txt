@@ -1,5 +1,5 @@
 matplotlib==2.2.2
-nltk==3.2.5
+nltk==3.4
 pandas==0.22.0
 spacy==2.0.11
 wordcloud==1.4.1

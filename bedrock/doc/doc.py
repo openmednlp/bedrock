@@ -15,13 +15,13 @@ class Doc:
         self._text = ""
         self._filename = ""
 
-        columns = ['doc_id', 'sofa_id', 'token_id', 'beg', 'end', 'layer', 'feature', 'class', 'origin']
+        columns = ['begin', 'end', 'layer', 'feature', 'feature_value']
         self._annotations = pd.DataFrame(columns=columns)
 
-        columns = ['doc_id', 'sent_id', 'token_id', 'text', 'beg', 'end', 'is_sent_start', 'pos', 'dep', 'origin']
+        columns = ['id', 'text', 'begin', 'end', 'is_sent_start', 'pos_value', 'dependency_type', 'governor_id', 'entity']
         self._tokens = pd.DataFrame(columns=columns)
 
-        columns = ['doc_id', 'sofa_id', 'gov_anno_id', 'dep_anno_id', 'beg', 'end', 'layer', 'role', 'origin']
+        columns = ['begin', 'end', 'governor_id', 'layer', 'feature', 'feature_value', 'dependent_id']
         self._relations = pd.DataFrame(columns=columns)
 
     def set_text(self, text: str):
