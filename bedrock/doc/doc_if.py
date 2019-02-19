@@ -21,10 +21,10 @@ class Doc(ABC):
         columns = ['doc_id', 'sent_id', 'token_id', 'text', 'beg', 'end', 'is_sent_start', 'pos', 'dep', 'origin']
         self._tokens = pd.DataFrame(columns=columns)
 
-        columns = ['doc_id', 'sofa_id', 'gov_anno_id', 'dep_anno_id', 'layer', 'role', 'origin']
+        columns = ['doc_id', 'sofa_id', 'gov_anno_id', 'dep_anno_id', 'beg', 'end', 'layer', 'role', 'origin']
         self._relations = pd.DataFrame(columns=columns)
 
-    def set_text(self, text:str):
+    def set_text(self, text: str):
         self._text = text
 
     def get_text(self) -> str:
