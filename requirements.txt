@@ -17,4 +17,5 @@ tox
 unittest2
 python-dotenv
 fuzzywuzzy
+fuzzysearch
 python-Levenshtein
