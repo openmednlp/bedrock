@@ -40,11 +40,13 @@ class TestPreprocessing(unittest.TestCase):
         dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
         dictionary = dictionary[dictionary['languageCode'] == 'de']
         dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
-        dictionary_labeler = DictionaryTreeLabeler(dictionary['term'].tolist(),
+
+        dict_labeler = DictionaryTreeLabeler(dictionary['term'].tolist(),
                                                    dictionary['referencedComponentId'].tolist(),
                                                    dictionary['Group'].tolist(), 'fuzzy-dictionary-tree-labeler')
 
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [dictionary_labeler])
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_labeler, dict_labeler])
+
         preprocessing_engine.preprocess(docs)
 
 

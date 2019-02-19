@@ -1,4 +1,4 @@
-from bedrock.doc.doc_if import Doc
+from bedrock.doc.doc import Doc
 from typing import List
 from bedrock.tagger.tagger_if import Tagger
 from bedrock.prelabel.annotator_if import Annotator
@@ -18,7 +18,6 @@ class PreprocessingEngine:
             doc.set_relations(relations)
 
     def __set_annotations(self, docs: List[Doc]):
-
         for doc in docs:
             for annotator in self.annotators:
                 annotations, relations = annotator.get_annotations(doc)

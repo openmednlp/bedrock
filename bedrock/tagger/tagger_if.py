@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from bedrock.doc.doc_if import Doc
+from bedrock.doc.doc import Doc
 import pandas as pd
 
 

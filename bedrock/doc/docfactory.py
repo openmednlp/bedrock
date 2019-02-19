@@ -1,7 +1,7 @@
-from bedrock.doc.doc_if import Doc
+from bedrock.doc.doc import Doc
 from xml.sax import saxutils
 from bedrock.pycas.cas.core.CasFactory import CasFactory
-from bedrock.pycas.cas.writer.CAStoDf import CAStoDf
+from bedrock.utils.CAS2DataFrameConverter import CAS2DataFrameConverter
 
 
 class DocFactory:
@@ -10,7 +10,7 @@ class DocFactory:
     def create_doc_from_text(text: str, filename: str) -> Doc:
         doc = Doc()
         doc.set_filename(filename)
-        doc.set_text(DocFactory.__preprocess(text)) # TODO shouldn't we pass text to the constructor??
+        doc.set_text(DocFactory.__preprocess(text))
         return doc
 
     @staticmethod
@@ -18,7 +18,7 @@ class DocFactory:
         doc = Doc()
         doc.set_filename(xmi_filename)
         cas = CasFactory().buildCASfromStrings(xmi_content, type_content)
-        tokens, annotations, relations = CAStoDf().toDf(cas) # TODO CAStoDF has to be refactored !
+        uima, tokens, annotations, relations = CAS2DataFrameConverter.get_dataframes(cas)
         doc.set_text(cas.documentText)
         doc.set_tokens(tokens)
         doc.set_annotations(annotations)

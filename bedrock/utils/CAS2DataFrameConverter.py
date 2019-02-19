@@ -1,46 +1,34 @@
-'''
-Created on Dez, 2018
-
-@author: RA
-'''
-import os
-import sys
 import pandas as pd
 import html
-from xml.sax import saxutils
 from bedrock.pycas.cas.core.FeatureStructure import FeatureStructure
 from bedrock.pycas.type.cas.TypeDescription import TypeDescription
 import pandasql as ps
 
 
-class CAStoDf(object):
-    '''
-    This class writes a CAS object into csv format (including annotations)
-    '''
-    def __init__(self):
-        '''
-        Constructor
-        Todo: add meta info to text, source, unique identifier etc
-        '''
+class CAS2DataFrameConverter:
 
+    @staticmethod
+    def __get_tokens(cas):
+        # TODO
+        tokens = pd.DataFrame()
+        return tokens
 
-    def writeToCSV(self, cas):
-           return self.__toCSV(cas)
+    @staticmethod
+    def __get_annotations(cas):
+        # TODO
+        annotations = pd.DataFrame()
+        return annotations
 
+    @staticmethod
+    def __get_relations(cas):
+        # TODO
+        relations = pd.DataFrame()
+        return relations
 
-    def write(self,cas,filepath):
-        try:
-            if not (os.path.dirname(filepath) == ""):
-                os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    @staticmethod
+    def get_dataframes(cas):
 
-            uima_df, token_csv, anno_df, relation_df= self.__toDf(cas)
-            token_csv.to_csv(filepath)
-        except:
-            print('Something went wrong! cannot create file',os.path.basename(filepath),'in',os.path.dirname(filepath))
-            sys.exit(1)
-
-
-    def toDf(self, cas):
+        # TODO do refactoring!!
         '''
         Generates panda df from the UIMA CAS: tokens, annotations, relations, uima (combined)
         '''
@@ -60,8 +48,6 @@ class CAStoDf(object):
         layer = ''
         class_name = ''
         cas_text = ''
-
-
 
         for element in cas.getAnnotationIndex():
             xmi_id = int(element.FSid)
@@ -145,7 +131,7 @@ class CAStoDf(object):
         uima_df.set_index('token_id')
 
 
-        sqlsentid= '''
+        sqlsentid = '''
             select uima.*, sent.sent_id
             from uima_df uima
             left join sentence_df sent
@@ -155,7 +141,7 @@ class CAStoDf(object):
 
         uima_df = ps.sqldf(sqlsentid, locals())
 
-        #Todo check bounderies in join, left join??
+        # TODO check bounderies in join, left join??
         if anno_df.empty == False:
             sqlanno = '''
                     select anno.class_name, anno.layer, 
@@ -174,25 +160,10 @@ class CAStoDf(object):
                                      columns='col_pivot')
             uima_df = uima_df.merge(t1, left_on = 'token_id', right_index = True, how='left')
 
-
-        #add text to token list
+        # add text to token list
         for i, row in uima_df.iterrows():
             uima_df.loc[i, 'text'] = cas_text[int(uima_df['begin'].iloc[i] + 1):int(uima_df['end'].iloc[i] + 1)]
 
-
-        #TODO add dependency info to uima_df, maybe token_df not necessary as output
+        # TODO add dependency info to uima_df, maybe token_df not necessary as output
         return uima_df, token_df, anno_df, relation_df
 
-
-    def __getTagQualifier(self, giventype):
-        """ This method returns the tag qualifier for a given type
-        """
-        domain = giventype[0:giventype.rfind(".")]
-        for nselem in self.__xmlnsDictList:
-            if nselem['namespace'] == domain:
-                tagQualifier = nselem['tagQualifier']
-        return tagQualifier
-
-
-def escape(s):
-    return saxutils.quoteattr(str(s))
