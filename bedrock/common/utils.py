@@ -6,6 +6,8 @@ import pickle
 import glob
 import pandas as pd
 
+
+
 def config_to_namedtuple(config_path='config.ini'):
     _config = configparser.ConfigParser()
     _config.read(config_path)

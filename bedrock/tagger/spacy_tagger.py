@@ -1,6 +1,5 @@
 from bedrock.doc.doc import Doc
 from bedrock.tagger.tagger_if import Tagger
-from bedrock.utils import uima
 import spacy
 import pandas as pd
 

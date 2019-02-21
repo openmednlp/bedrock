@@ -1,31 +1,12 @@
 import pandas as pd
 import html
-from bedrock.pycas.cas.core.FeatureStructure import FeatureStructure
-from bedrock.pycas.type.cas.TypeDescription import TypeDescription
+from pycas.cas.core import FeatureStructure
+from pycas.type.cas.TypeDescription import TypeDescription
 import pandasql as ps
 
 
 class CAS2DataFrameConverter:
 
-    @staticmethod
-    def __get_tokens(cas):
-        # TODO
-        tokens = pd.DataFrame()
-        return tokens
-
-    @staticmethod
-    def __get_annotations(cas):
-        # TODO
-        annotations = pd.DataFrame()
-        return annotations
-
-    @staticmethod
-    def __get_relations(cas):
-        # TODO
-        relations = pd.DataFrame()
-        return relations
-
-    @staticmethod
     def get_dataframes(cas):
 
         # TODO do refactoring!!

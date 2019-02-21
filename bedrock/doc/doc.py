@@ -1,8 +1,8 @@
 import pandas as pd
-from bedrock.pycas.type.cas import TypeSystemFactory
-from bedrock.pycas.cas.core import CAS
-from bedrock.pycas.cas.writer import XmiWriter
-from bedrock.utils import uima
+from pycas.type.cas import TypeSystemFactory
+from pycas.cas.core import CAS
+from pycas.cas.writer import XmiWriter
+from common import uima
 
 
 class Doc:
@@ -62,8 +62,7 @@ class Doc:
         self._relations = self._relations.append(relations)
 
     def save_as_pickle(self, file_path):
-        import bedrock.common
-        bedrock.common.save_pickle(self, file_path)
+        common.utils.save_pickle(self, file_path)
 
     def get_cas(self, typesystem_filepath):
 
@@ -143,5 +142,4 @@ class Doc:
         xmi_writer.write(cas, file_name)
 
     def load_pickle(file_path):
-        import bedrock.common
-        return bedrock.common.load_pickle(file_path)
+        return common.utils.load_pickle(file_path)

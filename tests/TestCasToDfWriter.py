@@ -1,8 +1,8 @@
 import unittest2 as unittest
 
 import os
-from bedrock.pycas.cas.core.CasFactory import CasFactory
-from bedrock.utils.CAS2DataFrameConverter import CAS2DataFrameConverter
+from pycas.cas.core.CasFactory import CasFactory
+from common.cas2df import CAS2DataFrameConverter
 
 
 class TestCAStoDFWriterMethods(unittest.TestCase):

@@ -11,8 +11,7 @@ class RegexLabeler(Labeler):
 
     def get_labels(self, doc: Doc) -> pd.DataFrame:
 
-        columns = ['beg', 'end', 'layer', 'feature', 'class', 'sofa_id'] # TODO needs to be changed
-        labels = pd.DataFrame(columns=columns)
+        labels = pd.DataFrame()
         for key1, value in self._patterns.items():
             for key2, value2 in value.items():
                 vec, match = findpattern(str(value2['regex']), doc.get_text())
