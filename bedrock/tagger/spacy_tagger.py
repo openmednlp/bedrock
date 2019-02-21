@@ -15,7 +15,6 @@ class SpacyTagger(Tagger):
         spacy_doc = self.nlp(doc.get_text())
 
         # TODO is_sent_start of spaCy is inconsistent! take care!
-        # TODO column names need to be adapted to UIMA
 
         OFFSET = 19
 
@@ -30,8 +29,6 @@ class SpacyTagger(Tagger):
              for token_id, token in enumerate(spacy_doc)],
             columns=cols
         )
-
-        print(tokens)
 
         # tokens
         annotations = tokens[['id', 'begin', 'end']]  # makes a data frame copy

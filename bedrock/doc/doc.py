@@ -15,7 +15,7 @@ class Doc:
         self._text = ""
         self._filename = ""
 
-        # TODO define using :
+        # TODO define using:
         # columns = ['layer', 'feature', 'feature_value', 'origin']
         # self._annotations = pd.DataFrame(columns=columns)
         #
@@ -61,16 +61,6 @@ class Doc:
     def append_relations(self, relations: pd.DataFrame):
         self._relations = self._relations.append(relations)
 
-    def remove_annotation(self, sofa_id_list):
-        rm = self._annotations['sofa_id'].isin(sofa_id_list)
-        if sum(rm) > 0:
-           self._annotations = self._annotations[rm == False]
-
-    def remove_relation(self, sofa_id_list):
-        rm = self._relations['sofa_id'].isin(sofa_id_list)
-        if sum(rm) > 0:
-           self._relations = self._relations[rm == False]
-
     def save_as_pickle(self, file_path):
         import bedrock.common
         bedrock.common.save_pickle(self, file_path)
@@ -89,15 +79,13 @@ class Doc:
         # iterate over annotations
         for _, annotation in self._annotations.iterrows():
 
-            # get the layer of the annotation
             layer = annotation['layer']
 
-            # add an token annotation
             if layer == 'token':
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.TOKEN, {
                     'begin': int(annotation['begin']),
                     'end': int(annotation['end'])
-                }, int(annotation['id']))
+                })
             elif layer == 'pos':
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.POS, {
                     'begin': int(annotation['begin']),
@@ -124,28 +112,29 @@ class Doc:
         for _, relation in self._relations.iterrows():
 
             if relation['layer'] == 'dependency':
-                print(relation['feature_value'])
-                print(type(relation['feature_value']))
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.DEPENDENCY, {
                     'begin': int(relation['begin']),
                     'end': int(relation['end']),
-                    uima.DependencyFeatureNames.GOVERNOR: int(relation['governor_id']),
-                    uima.DependencyFeatureNames.DEPENDENT: int(relation['dependent_id']),
                     uima.DependencyFeatureNames.DEPENDENCY_TYPE: relation['feature_value']
                 })
                 cas.addToIndex(fs_anno)
 
+                fs_governor = None
+                fs_dependent = None
+                for fs in cas.getAnnotationIndex():
+                    if fs.FSid == int(relation['governor_id']):
+                        fs_governor = fs
+                    if fs.FSid == int(relation['dependent_id']):
+                        fs_dependent = fs
+                if fs_dependent is None:
+                    raise ValueError("cannot set dependent. dependet feature is None")
+                setattr(fs_anno, uima.DependencyFeatureNames.DEPENDENT, fs_dependent)
+                if fs_governor is None:
+                    raise ValueError("cannot set governor. governor feature is None")
+                setattr(fs_anno, uima.DependencyFeatureNames.GOVERNOR, fs_governor)
 
-        # TODO add dependencies to cas
-        # < dependency: Dependency
-        # xmi: id = "6501"
-        # sofa = "1"
-        # begin = "60"
-        # end = "63"
-        # Governor = "78"
-        # Dependent = "92"
-        # DependencyType = "acl"
-        # flavor = "basic" / >
+                # TODO add flavor feature ? "flavor":"basic"
+
         return cas
 
     def write_xmi(self, file_name, typesystem_filepath):
