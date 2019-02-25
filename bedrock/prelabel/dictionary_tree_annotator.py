@@ -1,5 +1,5 @@
 from bedrock.prelabel.annotator_if import Annotator
-from bedrock.doc.doc import Doc
+from bedrock.doc.doc import Doc, Token, Annotation, Relation, Layer
 from typing import List
 from functools import reduce
 import pandas as pd
@@ -149,24 +149,24 @@ class DictionaryTreeLabeler(Annotator):
         data['length'] = data['split'].apply(lambda x: len(x))
 
     def __token_sorting_key(self, token):
-        return token['beg']
+        return token[Token.BEGIN]
 
     def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
 
         annotations = doc.get_annotations()
-        sentences = annotations[annotations['layer'] == 'sentence']
+        sentences = annotations[annotations[Annotation.LAYER] == 'sentence']
 
-        new_annotations = pd.DataFrame(columns=['begin', 'end', 'layer', 'feature', 'feature_value'])
-        new_relations = pd.DataFrame(columns=['governor_id', 'dependent_id', 'begin', 'end', 'layer'])
+        new_annotations = pd.DataFrame(columns=Annotation.COLS)
+        new_relations = pd.DataFrame(columns=Relation.COLS)
 
         if sentences.empty:
             raise Exception('No sentences available')
 
         for index, sentence in sentences.iterrows():
 
-            begin = sentence['beg']
-            end = sentence['end']
-            sentence_tokens = doc.get_tokens()[(doc.get_tokens()['begin'] >= begin) & (doc.get_tokens()['end'] <= end) & (doc.get_tokens()['pos_value'] != 'PUNCT')]
+            begin = sentence[Token.BEGIN]
+            end = sentence[Token.END]
+            sentence_tokens = doc.get_tokens()[(doc.get_tokens()[Token.BEGIN] >= begin) & (doc.get_tokens()[Token.END] <= end) & (doc.get_tokens()['pos_value'] != 'PUNCT')]
 
             nodes_to_visit = list()
             nodes_to_visit.append({'tree': self._tree, 'path': None})
@@ -184,22 +184,23 @@ class DictionaryTreeLabeler(Annotator):
                         current_path.sort(key=self.__token_sorting_key)
                         for idx, token in enumerate(current_path):
                             new_annotations = new_annotations.append({
-                                'begin': token['begin'],
-                                'end': token['end'],
-                                'layer': 'custom',
-                                'feature': current_class['feature'],
-                                'feature_value': current_class['class']
+                                Annotation.ID: token[Token.ID],
+                                Annotation.BEGIN: token[Token.BEGIN],
+                                Annotation.END: token[Token.END],
+                                Annotation.LAYER: Layer.TUMOR,
+                                Annotation.FEATURE: current_class['feature'],
+                                Annotation.FEATURE_VAL: current_class['class']
                             }, ignore_index=True)
                             if len(current_path) > 1 and idx > 0:
                                 new_relations = new_relations.append({
-                                    'governant_id': idx,
-                                    'dependent_id': last_id,
-                                    'begin': token['begin'],
-                                    'end': token['end'],
-                                    'layer': 'custom'
+                                    Relation.GOV_ID: token[Token.ID],
+                                    Relation.DEP_ID: last_id,
+                                    Relation.BEGIN: token[Token.BEGIN],
+                                    Relation.FEATURE: current_class['feature'],
+                                    Relation.FEATURE_VAL: current_class['class']
                                 }, ignore_index=True)
 
-                            last_id = idx
+                            last_id = token[Token.ID]
 
                 for sentence_index, sentence_token_row in sentence_tokens.iterrows():
                     text = self._stemmer.stem(sentence_token_row['text'])

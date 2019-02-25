@@ -10,7 +10,7 @@ class RegexAnnotator(Annotator):
         self.__patterns = patterns
         self.__layer_name = layer_name
 
-    def get_annotations(self, doc: Doc) -> pd.DataFrame:
+    def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
 
         annotators = pd.DataFrame()
         for key1, value in self.__patterns.items():
@@ -25,4 +25,4 @@ class RegexAnnotator(Annotator):
                         Annotation.FEATURE_VAL: value2['tag_name'],
                     }, ignore_index=True)
 
-        return annotators
+        return annotators, None
