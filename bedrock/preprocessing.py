@@ -16,13 +16,23 @@ class PreprocessingEngine:
             doc.set_tokens(tokens)
             doc.set_annotations(annotations)
             doc.set_relations(relations)
+            # print("Tokens:")
+            # print(tokens)
+            # print("\n")
+            # print("Annotations:")
+            # print(annotations)
+            # print("\n")
+            # print("Relations:")
+            # print(relations)
+            # print("\n")
 
     def __set_annotations(self, docs: List[Doc]):
         for doc in docs:
             for annotator in self.annotators:
                 annotations, relations = annotator.get_annotations(doc)
                 doc.append_annotions(annotations)
-                doc.append_relations(relations)
+                if relations is not None:
+                    doc.append_relations(relations)
 
     def preprocess(self, docs: List[Doc]) -> List[Doc]:
         self.__set_tags(docs)

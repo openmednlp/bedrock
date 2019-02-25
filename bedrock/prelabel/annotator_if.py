@@ -8,5 +8,3 @@ class Annotator(ABC):
     @abstractmethod
     def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
         pass
-
-
