@@ -1,10 +1,12 @@
-from bedrock.doc.doc import Doc
+from bedrock.doc.doc import Doc, Token, Annotation, Layer, Relation
 from bedrock.tagger.tagger_if import Tagger
 import spacy
 import pandas as pd
 
 
 class SpacyTagger(Tagger):
+
+    ID_OFFSET = 19
 
     def __init__(self, spacy_model_path):
         self.nlp = spacy.load(spacy_model_path)
@@ -15,50 +17,47 @@ class SpacyTagger(Tagger):
 
         # TODO is_sent_start of spaCy is inconsistent! take care!
 
-        OFFSET = 19
-
-        cols = ['id', 'text', 'begin', 'end', 'is_sent_start', 'pos_value', 'dependency_type', 'governor_id', 'entity']
         tokens = pd.DataFrame(
-            [(token_id + OFFSET,
+            [(token_id + self.ID_OFFSET,
               token.text,
               token.idx,
               token.idx + len(token.text),
-              token.is_sent_start, token.pos_, token.dep_, token.head.i + OFFSET,
+              token.is_sent_start, token.pos_, token.dep_, token.head.i + self.ID_OFFSET,
               "{0}-{1}".format(token.ent_iob_, token.ent_type_) if token.ent_iob_ != 'O' else token.ent_iob_)
              for token_id, token in enumerate(spacy_doc)],
-            columns=cols
+            columns=Token.COLS
         )
 
         # tokens
-        annotations = tokens[['id', 'begin', 'end']]  # makes a data frame copy
-        annotations.loc[:, 'layer'] = 'token'
-        annotations.loc[:, 'feature'] = None  # 'token'
-        annotations.loc[:, 'feature_value'] = None  # tokens['id']
+        annotations = tokens[[Token.ID, Token.BEGIN, Token.END]]  # makes a data frame copy
+        annotations.loc[:, Annotation.LAYER] = Layer.TOKEN
+        annotations.loc[:, Annotation.FEATURE] = None  # 'token' TODO unclear if ok?
+        annotations.loc[:, Annotation.FEATURE_VAL] = None  # tokens['id'] TODO unclear if ok?
 
-        # POS annotations
-        pos_annotations = tokens[['begin', 'end']]
-        pos_annotations.loc[:, 'layer'] = 'pos'  # type in TypeSystem file, type description name
-        pos_annotations.loc[:, 'feature'] = 'pos_value'
-        pos_annotations.loc[:, 'feature_value'] = tokens['pos_value']
+        # pos annotations
+        pos_annotations = tokens[[Token.BEGIN, Token.END]]
+        pos_annotations.loc[:, Annotation.LAYER] = Layer.POS  # type in TypeSystem file, type description name
+        pos_annotations.loc[:, Annotation.FEATURE] = Token.POS_VALUE
+        pos_annotations.loc[:, Annotation.FEATURE_VAL] = tokens[Token.POS_VALUE]
         annotations = annotations.append(pos_annotations, ignore_index=True)
 
         # sentence annotations
-        sentence_start = tokens['is_sent_start']==True  #
+        sentence_start = tokens[Token.SENT_START]==True
         sentence_start[0] = True
-        sentence_annotations = pd.DataFrame(tokens[sentence_start]['begin'].astype(int))  # TODO do we need to use .loc here?
-        sentence_annotations.loc[:, 'end'] = sentence_annotations['begin'].shift(-1).fillna(len(doc.get_text())).astype(int) - 1
-        sentence_annotations.loc[:, 'layer'] = 'sentence'
-        sentence_annotations.loc[:, 'feature'] = None  # 'sentence' TODO unclear
-        sentence_annotations.loc[:, 'feature_value'] = None  # list(range(sentence_annotations.shape[0])) TODO unclear
+        sentence_annotations = pd.DataFrame(tokens[sentence_start][Token.BEGIN].astype(int)) # TODO do we need to use .loc here?
+        sentence_annotations.loc[:, Annotation.END] = sentence_annotations[Annotation.BEGIN].shift(-1).fillna(len(doc.get_text())).astype(int) - 1
+        sentence_annotations.loc[:, Annotation.LAYER] = Layer.SENT
+        sentence_annotations.loc[:, Annotation.FEATURE] = None  # 'sentence' TODO unclear if ok?
+        sentence_annotations.loc[:, Annotation.FEATURE_VAL] = None # TODO unclear if ok?
 
         annotations = annotations.append(sentence_annotations, ignore_index=True)
 
         # dependencies
-        relations = tokens[['begin', 'end', 'governor_id']]
-        relations.loc[:, 'layer'] = 'dependency'
-        relations.loc[:, 'feature'] = 'dependency_type'
-        relations.loc[:, 'feature_value'] = tokens['dependency_type']
-        relations.loc[:, 'dependent_id'] = tokens['id']
+        relations = tokens[[Token.BEGIN, Token.END, Relation.GOV_ID]]
+        relations.loc[:, Relation.LAYER] = Layer.DEP
+        relations.loc[:, Relation.FEATURE] = Token.DEP_TYPE
+        relations.loc[:, Relation.FEATURE_VAL] = tokens[Token.DEP_TYPE]
+        relations.loc[:, Relation.DEP_ID] = tokens[Token.ID]
 
         return tokens, annotations, relations
 

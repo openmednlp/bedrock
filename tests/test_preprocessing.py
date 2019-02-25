@@ -1,8 +1,8 @@
 import unittest
 import os
 from bedrock.doc.docfactory import DocFactory
-from bedrock.prelabel.regex_labeler import RegexLabeler
-from bedrock.prelabel.dictionary_labeler import DictionaryLabeler
+from bedrock.prelabel.regex_annotator import RegexAnnotator
+from bedrock.prelabel.dictionary_labeler import DictionaryAnnotator
 from bedrock.tagger.spacy_tagger import SpacyTagger
 from dotenv import load_dotenv
 import pandas as pd
@@ -33,7 +33,7 @@ class TestPreprocessing(unittest.TestCase):
         # initialize regex labeler
         with open(os.getenv("TNM_PATTERNS"), 'r') as f:
             tnm_regex_patterns = json.loads(f.read())
-        regex_labeler = RegexLabeler(tnm_regex_patterns)
+        regex_annotator = RegexAnnotator(tnm_regex_patterns)
 
         # initialize dictionary labeler
         dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
@@ -41,7 +41,7 @@ class TestPreprocessing(unittest.TestCase):
         dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
         # dict_labeler = DictionaryLabeler(dictionary) TODO does not work
 
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_labeler]) #, dict_labeler])
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator]) #, dict_labeler])
         preprocessing_engine.preprocess(docs)
 
         for idx, doc in enumerate(docs):

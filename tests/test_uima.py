@@ -23,7 +23,7 @@
 #                 utx = ubertx.Ubertext(spacy_model, f.name, file_type_syst)
 #                 utx.set_cas_from_spacy(file_type_syst)
 #
-#                 utx.add_regex_label_to_cas("prelabel/patterns.json")
+#                 utx.add_regex_label_to_cas("prelabel/tnm.json")
 #                 xmi_writer = XmiWriter.XmiWriter()
 #                 xmi_writer.write(utx.cas, file_output_dir + file_names[file].replace('.txt', '.xmi'))
 #

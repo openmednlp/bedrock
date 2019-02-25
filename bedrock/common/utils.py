@@ -7,6 +7,10 @@ import glob
 import pandas as pd
 
 
+def get_layer_name(type_name: str) -> str:
+    tmp = type_name.value.split('.')
+    return tmp[len(tmp)-1]
+
 
 def config_to_namedtuple(config_path='config.ini'):
     _config = configparser.ConfigParser()

@@ -1,4 +1,4 @@
-from bedrock.prelabel.labeler_if import Labeler
+from bedrock.prelabel.annotator_if import Annotator
 from bedrock.doc.doc import Doc
 import pandas as pd
 from fuzzywuzzy import fuzz
@@ -6,7 +6,7 @@ from fuzzywuzzy import process
 from fuzzysearch import find_near_matches
 
 
-class DictionaryLabeler(Labeler):
+class DictionaryAnnotator(Annotator):
 
     def __init__(self, dictionary: pd.DataFrame):
         self._dictionary = dictionary
