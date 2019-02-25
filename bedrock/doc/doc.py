@@ -69,8 +69,8 @@ class Doc:
         self.__text = ""
         self.__filename = ""
         self.__tokens = pd.DataFrame(columns=Token.COLS.value)
-        self.__annotations = pd.DataFrame(columns=Annotation.COLS)
-        self.__relations = pd.DataFrame(columns=Relation.COLS)
+        self.__annotations = pd.DataFrame(columns=Annotation.COLS.value)
+        self.__relations = pd.DataFrame(columns=Relation.COLS.value)
 
     def set_text(self, text: str):
         self.__text = text

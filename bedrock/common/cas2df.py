@@ -14,9 +14,9 @@ class CAS2DataFrameConverter:
         '''
         Generates panda df from the UIMA CAS: tokens, annotations, relations, uima (combined)
         '''
-        tokens = pd.DataFrame(columns=Token.COLS)
-        annotations = pd.DataFrame(columns=Annotation.COLS)
-        relations = pd.DataFrame(columns=Relation.COLS)
+        tokens = pd.DataFrame(columns=Token.COLS.value)
+        annotations = pd.DataFrame(columns=Annotation.COLS.value)
+        relations = pd.DataFrame(columns=Relation.COLS.value)
 
         for type in (uima.StandardTypeNames):
             print(type)
