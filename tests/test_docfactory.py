@@ -25,10 +25,10 @@ class TestDocFactory(unittest.TestCase):
                 doc = DocFactory.create_doc_from_xmi(file_content, typesystem_file_content, file_names[i])
                 docs.append(doc)
 
-        for idx, doc in enumerate(docs):
-            relative_filepath_split = file_names[idx].split('/')
-            filename = relative_filepath_split[len(relative_filepath_split)-1].split('.')
-            doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
+        # for idx, doc in enumerate(docs):
+        #     relative_filepath_split = file_names[idx].split('/')
+        #     filename = relative_filepath_split[len(relative_filepath_split)-1].split('.')
+        #     doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
 
 
 if __name__ == '__main__':

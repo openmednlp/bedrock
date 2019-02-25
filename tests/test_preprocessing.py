@@ -34,19 +34,19 @@ class TestPreprocessing(unittest.TestCase):
         # initialize regex labeler
         with open(os.getenv("TNM_PATTERNS"), 'r') as f:
             tnm_regex_patterns = json.loads(f.read())
-        regex_labeler = RegexAnnotator(tnm_regex_patterns)
+
+        regex_annotator = RegexAnnotator(tnm_regex_patterns)
 
         # initialize dictionary labeler
         dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
         dictionary = dictionary[dictionary['languageCode'] == 'de']
         dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
 
-        dict_labeler = DictionaryTreeLabeler(dictionary['term'].tolist(),
+        dict_annotator = DictionaryTreeLabeler(dictionary['term'].tolist(),
                                                    dictionary['referencedComponentId'].tolist(),
                                                    dictionary['Group'].tolist(), 'fuzzy-dictionary-tree-labeler')
 
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_labeler, dict_labeler])
-
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator, dict_annotator])
         preprocessing_engine.preprocess(docs)
 
 

@@ -1,53 +1,25 @@
 import pandas as pd
 import html
-from bedrock.pycas.cas.core.FeatureStructure import FeatureStructure
-from bedrock.pycas.type.cas.TypeDescription import TypeDescription
+from pycas.cas.core import FeatureStructure
+from pycas.type.cas.TypeDescription import TypeDescription
 import pandasql as ps
+from bedrock.doc.doc import Annotation, Token, Relation
+from bedrock.common import uima
 
 
 class CAS2DataFrameConverter:
 
-    @staticmethod
-    def __get_tokens(cas):
-        # TODO
-        tokens = pd.DataFrame()
-        return tokens
-
-    @staticmethod
-    def __get_annotations(cas):
-        # TODO
-        annotations = pd.DataFrame()
-        return annotations
-
-    @staticmethod
-    def __get_relations(cas):
-        # TODO
-        relations = pd.DataFrame()
-        return relations
-
-    @staticmethod
     def get_dataframes(cas):
 
-        # TODO do refactoring!!
         '''
         Generates panda df from the UIMA CAS: tokens, annotations, relations, uima (combined)
         '''
+        tokens = pd.DataFrame(columns=Token.COLS.value)
+        annotations = pd.DataFrame(columns=Annotation.COLS.value)
+        relations = pd.DataFrame(columns=Relation.COLS.value)
 
-        uima_df = pd.DataFrame()
-        anno_df = pd.DataFrame()
-        relation_df = pd.DataFrame()
-        token_df = pd.DataFrame()
-        other_df = pd.DataFrame()
-
-        sofa_id = 'nan'
-        feature_type = ''
-        begin = 'nan'
-        end = 'nan'
-        dep_anno_id = ''
-        gov_anno_id = ''
-        layer = ''
-        class_name = ''
-        cas_text = ''
+        for type in (uima.StandardTypeNames):
+            print(type)
 
         for element in cas.getAnnotationIndex():
             xmi_id = int(element.FSid)
@@ -105,15 +77,15 @@ class CAS2DataFrameConverter:
 
             #add info to df
             if feature_type in ['Token','Sentence']:
-                token_df = token_df.append({'feature_type': feature_type, 'sofa_id': xmi_id,
+                tokens = tokens.append({'feature_type': feature_type, 'sofa_id': xmi_id,
                                                 'begin': begin, 'end': end}, ignore_index=True)
 
             elif feature_type in ['POS', 'Tumor']:
-                anno_df= anno_df.append({'feature_type': feature_type, 'sofa_id': xmi_id,
+                annotations= annotations.append({'feature_type': feature_type, 'sofa_id': xmi_id,
                                                'begin': begin, 'end': end, 'layer': layer, 'class_name': class_name,
                                                'feature_name': feature_name}, ignore_index=True)
             elif feature_type in ['Dependency', 'TumorRelation']:
-                relation_df.append({'feature_type': feature_type, 'sofa_id': xmi_id,
+                relations.append({'feature_type': feature_type, 'sofa_id': xmi_id,
                                               'begin': begin, 'end': end, 'layer': layer,
                                               'gov_anno_id': gov_anno_id, 'dep_anno_id': dep_anno_id},  ignore_index=True)
             else:
@@ -121,11 +93,11 @@ class CAS2DataFrameConverter:
                                                  'begin': begin, 'end':end}, ignore_index=True)
 
 
-        sentence_df = token_df[token_df['feature_type'] == 'Sentence']
+        sentence_df = tokens[tokens['feature_type'] == 'Sentence']
         sentence_df.loc[:,'sent_id'] = sentence_df['sofa_id'].astype('category').cat.codes
 
         #output token list with added info annotation
-        uima_df = token_df[token_df['feature_type'] == 'Token']
+        uima_df = tokens[tokens['feature_type'] == 'Token']
         uima_df.loc[:,'token_id'] = range(0, len(uima_df))
         uima_df.loc[:,'text'] = ''
         uima_df.set_index('token_id')
@@ -142,12 +114,12 @@ class CAS2DataFrameConverter:
         uima_df = ps.sqldf(sqlsentid, locals())
 
         # TODO check bounderies in join, left join??
-        if anno_df.empty == False:
+        if annotations.empty == False:
             sqlanno = '''
                     select anno.class_name, anno.layer, 
                     uima.token_id,
                     group_concat(feature_name) feature_name
-                    from anno_df anno
+                    from annotations anno
                     inner join uima_df uima
                     on anno.begin <= uima.begin
                     and anno.end > uima.begin
@@ -164,6 +136,6 @@ class CAS2DataFrameConverter:
         for i, row in uima_df.iterrows():
             uima_df.loc[i, 'text'] = cas_text[int(uima_df['begin'].iloc[i] + 1):int(uima_df['end'].iloc[i] + 1)]
 
-        # TODO add dependency info to uima_df, maybe token_df not necessary as output
-        return uima_df, token_df, anno_df, relation_df
+        # TODO add dependency info to uima_df, maybe tokens not necessary as output
+        return uima_df, tokens, annotations, relations
 
