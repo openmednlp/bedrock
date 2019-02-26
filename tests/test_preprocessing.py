@@ -43,8 +43,8 @@ class TestPreprocessing(unittest.TestCase):
         dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
 
         dict_annotator = DictionaryTreeLabeler(dictionary['term'].tolist(),
-                                                   dictionary['referencedComponentId'].tolist(),
-                                                   dictionary['Group'].tolist(), 'fuzzy-dictionary-tree-labeler')
+                                               dictionary['referencedComponentId'].tolist(),
+                                               dictionary['Group'].tolist(), 'fuzzy-dictionary-tree-labeler')
 
         preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator, dict_annotator])
         preprocessing_engine.preprocess(docs)

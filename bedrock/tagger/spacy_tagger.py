@@ -44,7 +44,6 @@ class SpacyTagger(Tagger):
         # sentence annotations
         sentence_start = tokens[Token.SENT_START]==True
         sentence_start[0] = True
-        print(tokens[sentence_start][Token.BEGIN])
         sentence_annotations = pd.DataFrame(tokens[sentence_start][Token.BEGIN].astype(int)) # TODO do we need to use .loc here?
         sentence_annotations.loc[:, Annotation.END] = sentence_annotations[Annotation.BEGIN].shift(-1).fillna(len(doc.get_text())).astype(int) - 1
         sentence_annotations.loc[:, Annotation.LAYER] = Layer.SENT
