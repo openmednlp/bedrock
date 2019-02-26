@@ -8,7 +8,7 @@ import pandas as pd
 
 
 def get_layer_name(type_name: str) -> str:
-    tmp = type_name.value.split('.')
+    tmp = type_name.split('.')
     return tmp[len(tmp)-1]
 
 

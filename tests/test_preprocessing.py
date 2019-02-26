@@ -4,11 +4,11 @@ from bedrock.doc.docfactory import DocFactory
 from bedrock.prelabel.regex_annotator import RegexAnnotator
 from bedrock.prelabel.dictionary_tree_annotator import DictionaryTreeLabeler
 from bedrock.tagger.spacy_tagger import SpacyTagger
+from bedrock.doc.doc import Layer
 from dotenv import load_dotenv
 import pandas as pd
 import json
 from bedrock.preprocessing import PreprocessingEngine
-import time
 
 load_dotenv()
 
@@ -35,7 +35,7 @@ class TestPreprocessing(unittest.TestCase):
         with open(os.getenv("TNM_PATTERNS"), 'r') as f:
             tnm_regex_patterns = json.loads(f.read())
 
-        regex_annotator = RegexAnnotator(tnm_regex_patterns)
+        regex_annotator = RegexAnnotator(tnm_regex_patterns, Layer.TUMOR)
 
         # initialize dictionary labeler
         dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
