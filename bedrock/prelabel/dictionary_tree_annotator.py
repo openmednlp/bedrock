@@ -154,7 +154,8 @@ class DictionaryTreeLabeler(Annotator):
     def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
 
         annotations = doc.get_annotations()
-        sentences = annotations[annotations[Annotation.LAYER] == 'sentence']
+
+        sentences = annotations[annotations[Annotation.LAYER] == Layer.SENT]
 
         new_annotations = pd.DataFrame(columns=Annotation.COLS)
         new_relations = pd.DataFrame(columns=Relation.COLS)
@@ -164,9 +165,11 @@ class DictionaryTreeLabeler(Annotator):
 
         for index, sentence in sentences.iterrows():
 
-            begin = sentence[Token.BEGIN]
-            end = sentence[Token.END]
-            sentence_tokens = doc.get_tokens()[(doc.get_tokens()[Token.BEGIN] >= begin) & (doc.get_tokens()[Token.END] <= end) & (doc.get_tokens()['pos_value'] != 'PUNCT')]
+            begin = sentence[Annotation.BEGIN]
+            end = sentence[Annotation.END]
+            sentence_tokens = doc.get_tokens()[(doc.get_tokens()[Token.BEGIN] >= begin) &
+                                               (doc.get_tokens()[Token.END] <= end) &
+                                               (doc.get_tokens()['pos_value'] != 'PUNCT')]
 
             nodes_to_visit = list()
             nodes_to_visit.append({'tree': self._tree, 'path': None})

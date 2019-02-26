@@ -19,13 +19,13 @@ class SpacyTagger(Tagger):
 
         tokens = pd.DataFrame(
             [(token_id + self.ID_OFFSET,
-              token.text,
               token.idx,
               token.idx + len(token.text),
+              token.text,
               token.is_sent_start, token.pos_, token.dep_, token.head.i + self.ID_OFFSET,
               "{0}-{1}".format(token.ent_iob_, token.ent_type_) if token.ent_iob_ != 'O' else token.ent_iob_)
              for token_id, token in enumerate(spacy_doc)],
-            columns=Token.COLS.value
+            columns=Token.COLS
         )
 
         # tokens
