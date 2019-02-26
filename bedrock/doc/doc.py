@@ -3,14 +3,13 @@ from pycas.type.cas import TypeSystemFactory
 from pycas.cas.core import CAS
 from pycas.cas.writer import XmiWriter
 from bedrock.common import uima, utils
-from enum import Enum
 
 
-class Token(Enum):
+class Token:
     ID = 'id'
-    TEXT = 'text'
     BEGIN = 'begin'
     END = 'end'
+    TEXT = 'text'
     SENT_START = 'is_sent_start'
     POS_VALUE = 'pos_value'
     DEP_TYPE = 'dependency_type'
@@ -19,11 +18,8 @@ class Token(Enum):
 
     COLS = [ID, BEGIN, END, TEXT, SENT_START, POS_VALUE, DEP_TYPE, GOV_ID, ENTITY]
 
-    def __str__(self):
-        return str(self.value)
 
-
-class Annotation(Enum):
+class Annotation:
     ID = 'id'
     BEGIN = 'begin'
     END = 'end'
@@ -33,11 +29,8 @@ class Annotation(Enum):
 
     COLS = [ID, BEGIN, END, LAYER, FEATURE, FEATURE_VAL]
 
-    def __str__(self):
-        return str(self.value)
 
-
-class Relation(Enum):
+class Relation:
     ID = 'id'
     BEGIN = 'begin'
     END = 'end'
@@ -49,11 +42,8 @@ class Relation(Enum):
 
     COLS = [ID, BEGIN, END, LAYER, FEATURE, FEATURE_VAL, GOV_ID, DEP_ID]
 
-    def __str__(self):
-        return str(self.value)
 
-
-class Layer(Enum):
+class Layer:
     TOKEN = utils.get_layer_name(uima.StandardTypeNames.TOKEN)
     POS = utils.get_layer_name(uima.StandardTypeNames.POS)
     SENT = utils.get_layer_name(uima.StandardTypeNames.SENTENCE)
@@ -68,9 +58,9 @@ class Doc:
         # TODO improvment by passing filename and text to constructor
         self.__text = ""
         self.__filename = ""
-        self.__tokens = pd.DataFrame(columns=Token.COLS.value)
-        self.__annotations = pd.DataFrame(columns=Annotation.COLS.value)
-        self.__relations = pd.DataFrame(columns=Relation.COLS.value)
+        self.__tokens = pd.DataFrame(columns=Token.COLS)
+        self.__annotations = pd.DataFrame(columns=Annotation.COLS)
+        self.__relations = pd.DataFrame(columns=Relation.COLS)
 
     def set_text(self, text: str):
         self.__text = text

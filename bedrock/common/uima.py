@@ -1,11 +1,10 @@
-from enum import Enum
 # TODO use TypeSystem as better alternative to assigne to set the correct values
 
 BEGIN = 'begin'
 END = 'end'
 
 
-class StandardTypeNames(Enum):
+class StandardTypeNames:
 
     SENTENCE = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence'
 
@@ -16,12 +15,12 @@ class StandardTypeNames(Enum):
     DEPENDENCY = 'de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency'
 
 
-class CustomTypeNames(Enum):
+class CustomTypeNames:
 
     TUMOR = 'webanno.custom.Tumor'
 
 
-class DependencyFeatureNames(Enum):
+class DependencyFeatureNames:
 
     GOVERNOR = 'Governor'
 
@@ -30,6 +29,6 @@ class DependencyFeatureNames(Enum):
     DEPENDENCY_TYPE = 'DependencyType'
 
 
-class PosFeatureNames(Enum):
+class PosFeatureNames:
 
     POS_VALUE = 'PosValue'

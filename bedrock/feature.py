@@ -1,6 +1,6 @@
 import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
-from gensim.models import Phrases, Word2Vec
+import common
 from sklearn.feature_extraction.text import CountVectorizer
 
 def train_tfidf_vectorizer(X, persist_path=None):
