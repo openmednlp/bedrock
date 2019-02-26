@@ -1,6 +1,6 @@
 from bedrock.prelabel.findpattern import findpattern
 from bedrock.prelabel.annotator_if import Annotator
-from bedrock.doc.doc import Doc
+from bedrock.doc.doc import Doc, Token, Annotation, Relation
 import pandas as pd
 
 
@@ -19,25 +19,14 @@ class PostlabelingAnnotator(Annotator):
             rule_affected_annotations = current_annotations[current_annotations[rule["column_identifier"]] == rule["column_value"]]
 
             for index, row in rule_affected_annotations.iterrows():
-                window_start_index = index - rule["window"] if index - rule["window"] >= 0 else 0
-                window_end_index = index + rule["window"] if index + rule["window"] < len(current_annotations) else len(current_annotations) - 1
+                token_index = int(current_tokens[current_tokens[Token.ID] == row[Annotation.ID]].index[0])
+                window_start_index = token_index - rule["window"] if index - rule["window"] >= 0 else 0
+                window_end_index = token_index + rule["window"] if index + rule["window"] < len(current_annotations) else len(current_annotations) - 1
 
+                window_tokens = current_tokens[window_start_index:window_end_index]
+                annotations_in_window = current_annotations.loc[current_annotations[Annotation.ID].isin(window_tokens[Token.ID])]
 
-        columns = ['beg', 'end', 'layer', 'feature', 'class', 'sofa_id'] # TODO needs to be changed
-        annotations = pd.DataFrame(columns=columns)
-        for key1, value in self._patterns.items():
-            for key2, value2 in value.items():
-                vec, match = findpattern(str(value2['regex']), doc.get_text())
-                for v in vec:
-                    annotations = annotations.append({
-                        'beg': int(v[0]),
-                        'end': int(v[1]),
-                        'layer': 'custom',
-                        'feature': value2['xmi_property'],
-                        'feature_value': value2['tag_name'],
-                    }, ignore_index=True)
-
-        return annotations, None
+        return current_annotations, current_relations
 
 
 
