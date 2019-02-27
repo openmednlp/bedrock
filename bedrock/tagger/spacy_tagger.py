@@ -1,4 +1,8 @@
-from bedrock.doc.doc import Doc, Token, Annotation, Layer, Relation
+from bedrock.doc.doc import Doc
+from doc.layer import Layer
+from doc.relation import Relation
+from doc.annotation import Annotation
+from doc.token import Token
 from bedrock.tagger.tagger_if import Tagger
 import spacy
 import pandas as pd
@@ -31,8 +35,8 @@ class SpacyTagger(Tagger):
         # tokens
         annotations = tokens[[Token.ID, Token.BEGIN, Token.END]]  # makes a data frame copy
         annotations.loc[:, Annotation.LAYER] = Layer.TOKEN
-        annotations.loc[:, Annotation.FEATURE] = None  # 'token' TODO unclear if ok?
-        annotations.loc[:, Annotation.FEATURE_VAL] = None  # tokens['id'] TODO unclear if ok?
+        annotations.loc[:, Annotation.FEATURE] = Token.TEXT
+        annotations.loc[:, Annotation.FEATURE_VAL] = tokens[Token.TEXT]
 
         # pos annotations
         pos_annotations = tokens[[Token.BEGIN, Token.END]]
@@ -44,18 +48,17 @@ class SpacyTagger(Tagger):
         # sentence annotations
         sentence_start = tokens[Token.SENT_START]==True
         sentence_start[0] = True
-        print(tokens[sentence_start][Token.BEGIN])
         sentence_annotations = pd.DataFrame(tokens[sentence_start][Token.BEGIN].astype(int)) # TODO do we need to use .loc here?
         sentence_annotations.loc[:, Annotation.END] = sentence_annotations[Annotation.BEGIN].shift(-1).fillna(len(doc.get_text())).astype(int) - 1
-        sentence_annotations.loc[:, Annotation.LAYER] = Layer.SENT
+        sentence_annotations.loc[:, Annotation.LAYER] = Layer.SENTENCE
         sentence_annotations.loc[:, Annotation.FEATURE] = None  # 'sentence' TODO unclear if ok?
-        sentence_annotations.loc[:, Annotation.FEATURE_VAL] = None # TODO unclear if ok?
+        sentence_annotations.loc[:, Annotation.FEATURE_VAL] = None  # TODO unclear if ok?
 
         annotations = annotations.append(sentence_annotations, ignore_index=True)
 
         # dependencies
         relations = tokens[[Token.BEGIN, Token.END, Relation.GOV_ID]]
-        relations.loc[:, Relation.LAYER] = Layer.DEP
+        relations.loc[:, Relation.LAYER] = Layer.DEPENDENCY
         relations.loc[:, Relation.FEATURE] = Token.DEP_TYPE
         relations.loc[:, Relation.FEATURE_VAL] = tokens[Token.DEP_TYPE]
         relations.loc[:, Relation.DEP_ID] = tokens[Token.ID]

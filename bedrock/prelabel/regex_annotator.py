@@ -1,6 +1,7 @@
 from bedrock.prelabel.findpattern import find_regex_pattern
 from bedrock.prelabel.annotator_if import Annotator
-from bedrock.doc.doc import Doc, Annotation
+from bedrock.doc.doc import Doc
+from doc.annotation import Annotation
 import pandas as pd
 
 

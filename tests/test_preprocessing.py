@@ -4,7 +4,7 @@ from bedrock.doc.docfactory import DocFactory
 from bedrock.prelabel.regex_annotator import RegexAnnotator
 from bedrock.prelabel.dictionary_labeler import DictionaryAnnotator
 from bedrock.tagger.spacy_tagger import SpacyTagger
-from bedrock.doc.doc import Layer
+from doc.layer import Layer
 from dotenv import load_dotenv
 import pandas as pd
 import json
