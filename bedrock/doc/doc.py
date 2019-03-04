@@ -1,54 +1,13 @@
 import pandas as pd
+
+from doc.annotation import Annotation
+from doc.layer import Layer
+from doc.relation import Relation
+from doc.token import Token
 from pycas.type.cas import TypeSystemFactory
 from pycas.cas.core import CAS
 from pycas.cas.writer import XmiWriter
 from bedrock.common import uima, utils
-
-
-class Token:
-    ID = 'id'
-    BEGIN = 'begin'
-    END = 'end'
-    TEXT = 'text'
-    SENT_START = 'is_sent_start'
-    POS_VALUE = 'pos_value'
-    DEP_TYPE = 'dependency_type'
-    GOV_ID = 'governor_id'
-    ENTITY = 'entity'
-
-    COLS = [ID, BEGIN, END, TEXT, SENT_START, POS_VALUE, DEP_TYPE, GOV_ID, ENTITY]
-
-
-class Annotation:
-    ID = 'id'
-    BEGIN = 'begin'
-    END = 'end'
-    LAYER = 'layer'
-    FEATURE = 'feature'
-    FEATURE_VAL = 'feature_value'
-
-    COLS = [ID, BEGIN, END, LAYER, FEATURE, FEATURE_VAL]
-
-
-class Relation:
-    ID = 'id'
-    BEGIN = 'begin'
-    END = 'end'
-    LAYER = 'layer'
-    FEATURE = 'feature'
-    FEATURE_VAL = 'feature_value'
-    GOV_ID = 'governor_id'
-    DEP_ID = 'dependent_id'
-
-    COLS = [ID, BEGIN, END, LAYER, FEATURE, FEATURE_VAL, GOV_ID, DEP_ID]
-
-
-class Layer:
-    TOKEN = utils.get_layer_name(uima.StandardTypeNames.TOKEN)
-    POS = utils.get_layer_name(uima.StandardTypeNames.POS)
-    SENT = utils.get_layer_name(uima.StandardTypeNames.SENTENCE)
-    DEP = utils.get_layer_name(uima.StandardTypeNames.DEPENDENCY)
-    TUMOR = utils.get_layer_name(uima.CustomTypeNames.TUMOR)
 
 
 class Doc:
@@ -103,8 +62,8 @@ class Doc:
 
     def get_cas(self, typesystem_filepath):
 
-        if self.__tokens.empty:
-            raise ValueError('token df empty in Doc.get_cas()')
+        # if self.__tokens.empty:
+        #     raise ValueError('tokens empty')
 
         type_system_factory = TypeSystemFactory.TypeSystemFactory()
         type_system = type_system_factory.readTypeSystem(typesystem_filepath)
@@ -128,13 +87,13 @@ class Doc:
                     uima.END: int(annotation[Annotation.END]),
                     uima.PosFeatureNames.POS_VALUE: annotation[Annotation.FEATURE_VAL]
                 })
-            elif layer.startswith('custom'):  # TODO unclear
+            elif layer == Layer.TUMOR:  # TODO unclear
                 fs_anno = cas.createAnnotation(uima.CustomTypeNames.TUMOR, {
                     uima.BEGIN: int(annotation[Annotation.BEGIN]),
                     uima.END: int(annotation[Annotation.END]),
                     annotation[Annotation.FEATURE]: annotation[Annotation.FEATURE_VAL]
                 })
-            elif layer == Layer.SENT:
+            elif layer == Layer.SENTENCE:
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.SENTENCE, {
                     uima.BEGIN: int(annotation[Annotation.BEGIN]),
                     uima.END: int(annotation[Annotation.END])
@@ -145,12 +104,13 @@ class Doc:
             if fs_anno is not None:
                 cas.addToIndex(fs_anno)
 
+        print(self.__relations)
         for _, relation in self.__relations.iterrows():
 
-            if relation[Relation.LAYER] == Annotation:
+            if relation[Relation.LAYER] == Layer.DEPENDENCY:
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.DEPENDENCY, {
-                    'begin': int(relation[Relation.BEGIN]),
-                    'end': int(relation[Relation.END]),
+                    uima.BEGIN: int(relation[Relation.BEGIN]),
+                    uima.END: int(relation[Relation.END]),
                     uima.DependencyFeatureNames.DEPENDENCY_TYPE: relation[Relation.FEATURE_VAL]
                 })
                 cas.addToIndex(fs_anno)
