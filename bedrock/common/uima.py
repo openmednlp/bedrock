@@ -19,6 +19,8 @@ class CustomTypeNames:
 
     TUMOR = 'webanno.custom.Tumor'
 
+    TUMOR_REL = 'webanno.custom.TumorRelation'
+
 
 class DependencyFeatureNames:
 
