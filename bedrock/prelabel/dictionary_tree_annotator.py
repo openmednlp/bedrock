@@ -1,4 +1,4 @@
-from bedrock.prelabel.annotator_if import Annotator
+from bedrock.prelabel.annotator import Annotator
 from bedrock.doc.doc import Doc, Token, Annotation, Relation, Layer
 from typing import List
 from functools import reduce
@@ -188,7 +188,7 @@ class DictionaryTreeAnnotator(Annotator):
         annotations = doc.get_annotations()
 
         # get all sentences from the document
-        sentences = annotations[annotations[Annotation.LAYER] == Layer.SENT]
+        sentences = annotations[annotations[Annotation.LAYER] == Layer.SENTENCE]
 
         #initialize the new annotations and relations table
         new_annotations = pd.DataFrame(columns=Annotation.COLS)
