@@ -1,9 +1,9 @@
 import unittest
 import os
 from bedrock.doc.docfactory import DocFactory
-from bedrock.prelabel.regex_annotator import RegexAnnotator
+from bedrock.prelabel.regexannotator import RegexAnnotator
 from bedrock.prelabel.dictionary_labeler import DictionaryAnnotator
-from bedrock.tagger.spacy_tagger import SpacyTagger
+from bedrock.tagger.spacytagger import SpacyTagger
 from doc.layer import Layer
 from dotenv import load_dotenv
 import pandas as pd
@@ -20,14 +20,26 @@ class TestPreprocessing(unittest.TestCase):
         output_dir_path = os.getenv("DATA_OUTPUT_PATH")
         typesystem_filepath = input_dir_path + "typesystem.xml"
 
-        file_names = [f for f in os.listdir(input_dir_path) if f.endswith('.txt')]
+        with open(typesystem_filepath, 'r') as f:
+            typesystem_file_content = f.read()
 
-        docs = list()
-        for i in range(0, len(file_names)):
-            with open(input_dir_path + file_names[i], 'r') as f:
-                file_text = f.read()
-                doc = DocFactory.create_doc_from_text(file_text, file_names[i])
-                docs.append(doc)
+        txt_filenames = []
+        xmi_filenames = []
+        txt_docs = []
+        xmi_docs = []
+        for filename in os.listdir(input_dir_path):
+            if filename.endswith('.txt'):
+                with open(input_dir_path + filename, 'r') as f:
+                    txt_filenames.append(filename)
+                    file_text = f.read()
+                    doc = DocFactory.create_doc_from_text(file_text, filename)
+                    txt_docs.append(doc)
+            elif filename.endswith('.xmi'):
+                with open(input_dir_path + filename, 'r') as f:
+                    xmi_filenames.append(filename)
+                    file_content = f.read()
+                    doc = DocFactory.create_doc_from_xmi(file_content, typesystem_file_content, filename)
+                    xmi_docs.append(doc)
 
         spacy_tagger = SpacyTagger(os.getenv("SPACY_MODEL_PATH"))
 
@@ -43,16 +55,22 @@ class TestPreprocessing(unittest.TestCase):
         # dict_labeler = DictionaryLabeler(dictionary) TODO does not work
 
         preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator]) #, dict_labeler])
-        preprocessing_engine.preprocess(docs)
+        preprocessing_engine.preprocess(txt_docs)
 
-        for idx, doc in enumerate(docs):
-            relative_filepath_split = file_names[idx].split('/')
-            filename = relative_filepath_split[len(relative_filepath_split)-1].split('.')
+        for idx, doc in enumerate(txt_docs):
+            filename = txt_filenames[idx].split('.')
             doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
-            # #write to csv
-            # uima_df, token_df, anno_df, rel_df = CAStoDf().toDf(utx.cas)
-            # uima_df.to_csv(output_dir_path + file_names[file].replace('.xmi', '_uima.csv'), sep="\t", index=False)
-            # anno_df.to_csv(output_dir_path + file_names[file].replace('xmi', '_anno.csv'), sep="\t", index=False)
+
+        for idx, doc in enumerate(xmi_docs):
+            filename = xmi_filenames[idx].split('.')
+            doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
+
+        preprocessing_engine = PreprocessingEngine(annotators=[regex_annotator])
+        preprocessing_engine.preprocess(xmi_docs)
+
+        for idx, doc in enumerate(xmi_docs):
+            filename = xmi_filenames[idx].split('.')
+            doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '_tnmregex' , '.xmi']), typesystem_filepath)
 
 
 if __name__ == '__main__':

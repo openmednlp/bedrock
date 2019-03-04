@@ -1,4 +1,4 @@
-from bedrock.prelabel.annotator_if import Annotator
+from bedrock.prelabel.annotator import Annotator
 from bedrock.doc.doc import Doc
 import pandas as pd
 from fuzzywuzzy import fuzz
