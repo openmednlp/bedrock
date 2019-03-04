@@ -10,8 +10,6 @@ class PostlabelingAnnotator(Annotator):
 
     def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
 
-        print(self._rules)
-
         current_tokens = doc.get_tokens()
         current_tokens = current_tokens[current_tokens[Token.POS_VALUE] != 'PUNCT']
 
@@ -39,7 +37,9 @@ class PostlabelingAnnotator(Annotator):
                                                       rule_affected_annotation[Annotation.END]
                 ].sort_values(by=Token.BEGIN).head(int(rule["window"]))
 
-                # if "ignore_sentence_boundaries" not in rule or rule["ignore_sentence_boundaries"] is False:
+                if "ignore_sentence_boundaries" not in rule or rule["ignore_sentence_boundaries"] is False:
+                    print('ignore sentence boundaries')
+                    # check if a sentence start flag is set in one of the windows
                     # TODO: remove the tokens over the sentence boundaries
                     # print('left', left_affected_tokens, 'right', right_affected_tokens)
                     # get_left_affected_tokens_sentence_start = left_affected_tokens[pd.notnull(left_affected_tokens[Token.SENT_START])] # & left_affected_tokens[Token.SENT_START] is True] #.sort_values(by=Token.END, ascending=False).head(1)
