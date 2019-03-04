@@ -1,18 +1,13 @@
 [
   {
     "window": 5,
-    "ignore_sentence_boundaries": true,
-    "column_identifier": "feature",
-    "value_identifier": "TNM",
-    "column_required": "feature",
-    "value_required": "TNM_version"
+    "identifier": [{ "column": "feature", "value": "TNM" }, { "column":  "feature_value", "value": "TNM"}],
+    "requires": [{ "column": "feature", "value": "TNM" }, { "column":  "feature_value", "value": "version"}]
   },
   {
     "window": 0,
     "ignore_sentence_boundaries": false,
-    "column_identifier": "feature",
-    "value_identifier": "TNM",
-    "column_required": "pos",
-    "value_required": "NOUN"
+    "identifier": [{ "column": "feature", "value": "TNM" }, { "column":  "feature_value", "value": "TNM"}],
+    "requires": [{ "column": "feature", "value": "TNM" }, { "column":  "feature_value", "value": "TNM_version"}]
   }
 ]
