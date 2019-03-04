@@ -2,7 +2,7 @@ import unittest
 import os
 from bedrock.doc.docfactory import DocFactory
 from bedrock.prelabel.regex_annotator import RegexAnnotator
-from bedrock.prelabel.dictionary_tree_annotator import DictionaryTreeLabeler
+from bedrock.prelabel.dictionary_tree_annotator import DictionaryTreeAnnotator
 from bedrock.tagger.spacy_tagger import SpacyTagger
 from doc.layer import Layer
 from dotenv import load_dotenv
@@ -42,9 +42,10 @@ class TestPreprocessing(unittest.TestCase):
         dictionary = dictionary[dictionary['languageCode'] == 'de']
         dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
 
-        dict_annotator = DictionaryTreeLabeler(dictionary['term'].tolist(),
-                                               dictionary['referencedComponentId'].tolist(),
-                                               dictionary['Group'].tolist(), 'fuzzy-dictionary-tree-labeler')
+        dict_annotator = DictionaryTreeAnnotator(dictionary['term'].tolist(),
+                                                 dictionary['Group'].tolist(),
+                                                 dictionary['referencedComponentId'].tolist(),
+                                                 'fuzzy-dictionary-tree-labeler')
 
         preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator, dict_annotator])
         preprocessing_engine.preprocess(docs)
