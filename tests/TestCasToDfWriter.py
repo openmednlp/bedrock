@@ -1,9 +1,8 @@
 import unittest2 as unittest
 
 import os
-from bedrock.pycas.cas.core.CasFactory import CasFactory
-from bedrock.pycas.cas.writer.CAStoDf import CAStoDf
-from bedrock.pycas.cas.core import CAS
+from pycas.cas.core.CasFactory import CasFactory
+from common.cas2df import CAS2DataFrameConverter
 
 
 class TestCAStoDFWriterMethods(unittest.TestCase):
@@ -21,7 +20,7 @@ class TestCAStoDFWriterMethods(unittest.TestCase):
                 typesysXML = readFileToString(file_type_syst)
                 cas = CasFactory().buildCASfromStrings(casXMI, typesysXML)
 
-                uima_df, token_df, anno_df, rel_df = CAStoDf().toDf(cas)
+                uima_df, token_df, anno_df, rel_df = CAS2DataFrameConverter().toDf(cas)
                 uima_df.to_csv(file_output_dir + file_names[file].replace('.xmi', '_uima.csv'), sep="\t", index=False)
                 anno_df.to_csv(file_output_dir + file_names[file].replace('xmi', '_anno.csv'), sep="\t", index=False)
 

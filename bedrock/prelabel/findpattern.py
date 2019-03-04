@@ -1,7 +1,7 @@
 import re
 
 
-def findpattern(regex, text):
+def find_regex_pattern(regex, text):
     
     reg = re.compile(regex)
 

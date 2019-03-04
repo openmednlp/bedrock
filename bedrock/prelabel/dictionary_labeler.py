@@ -1,23 +1,23 @@
-from bedrock.prelabel.labeler_if import Labeler
-from bedrock.doc.doc_if import Doc
+from bedrock.prelabel.annotator import Annotator
+from bedrock.doc.doc import Doc
 import pandas as pd
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from fuzzysearch import find_near_matches
 
 
-class DictionaryLabeler(Labeler):
+class DictionaryAnnotator(Annotator):
 
     def __init__(self, dictionary: pd.DataFrame):
         self._dictionary = dictionary
 
     def get_labels(self, doc: Doc) -> pd.DataFrame:
 
-        columns = ['beg', 'end', 'layer', 'feature', 'class', 'sofa_id']
+        columns = ['begin', 'end', 'layer', 'feature', 'feature_value']
         labels = pd.DataFrame(columns=columns)
 
         annotations = doc.get_annotations()
-        sentences = annotations[annotations['feature'] == 'sentence']
+        sentences = annotations[annotations['layer'] == 'sentence']
         if sentences.empty:
             raise Exception('No sentences available')
 
@@ -26,8 +26,8 @@ class DictionaryLabeler(Labeler):
 
         for index, sentence in sentences.iterrows():
 
-            begin = sentence['beg']
-            end = sentence['end']
+            begin = sentence['begin'].astype(int)
+            end = sentence['end'].astype(int)
             text = doc.get_text()[begin:end]
 
             for word, _, _ in process.extractBests(text, queries, scorer=fuzz.token_set_ratio, score_cutoff=86, limit=len(text)):
@@ -36,12 +36,11 @@ class DictionaryLabeler(Labeler):
                 code = codes[index]
                 for match in matches:
                     labels = labels.append({
-                        'beg': begin + match.start,
+                        'begin': begin + match.start,
                         'end': end + match.end,
                         'layer': 'custom',
                         'feature': 'Morphology',
-                        'class': code,
-                        'sofa_id': 0  # TODO sofa_id??
+                        'feature_value': code,
                     }, ignore_index=True)
 
         return labels
