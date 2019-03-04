@@ -104,7 +104,6 @@ class Doc:
             if fs_anno is not None:
                 cas.addToIndex(fs_anno)
 
-        print(self.__relations)
         for _, relation in self.__relations.iterrows():
 
             if relation[Relation.LAYER] == Layer.DEPENDENCY:

@@ -32,5 +32,6 @@ class TestDocFactory(unittest.TestCase):
 
         # TODO fix bug if tokens already in annotations when reading from UIMA XMI
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -3,7 +3,7 @@ from doc.layer import Layer
 from doc.relation import Relation
 from doc.annotation import Annotation
 from doc.token import Token
-from bedrock.tagger.tagger_if import Tagger
+from bedrock.tagger.tagger import Tagger
 import spacy
 import pandas as pd
 
