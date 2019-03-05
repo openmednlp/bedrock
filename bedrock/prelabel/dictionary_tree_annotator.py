@@ -38,7 +38,7 @@ class Node:
     def add_feature(self, feature: str, feature_value: str):
         """ add_feature adds a feature to the list of feature values
         """
-        feature_object = {'feature_value': feature_value, 'feature': feature}
+        feature_object = {Annotation.FEATURE_VAL: feature_value, Annotation.FEATURE: feature}
         # avoid duplicates
         if feature_object not in self._features:
             self._features.append(feature_object)
@@ -83,9 +83,18 @@ class Node:
         """
         self.print_tree(0)
 
+
 # DictionaryTreeAnnotator is the actual implementation of the annotator. It searches terms in the dictionary in the
 # sentences of a document and will give back a list of annotations and relations
 class DictionaryTreeAnnotator(Annotator):
+
+    ROOT = 'root'
+    TREE = 'tree'
+    TERM = 'term'
+    LENGTH = 'length'
+    SPLIT = 'split'
+    ADDED = 'added'
+    PATH = 'path'
 
     def __init__(self, terms: List[str], features: List[str], feature_values: List[str], origin: str):
         if len(terms) != len(feature_values) or len(feature_values) != len(features):
@@ -93,14 +102,14 @@ class DictionaryTreeAnnotator(Annotator):
         self._origin = origin
         self._data = pd.DataFrame(
             {
-                'term': terms,
-                'feature_value': feature_values,
-                'feature': features
+                self.TERM: terms,
+                Annotation.FEATURE_VAL: feature_values,
+                Annotation.FEATURE: features
             }
         )
         self._features_values = feature_values
         self._stemmer = Cistem()
-        self._tree = Node('root', None)
+        self._tree = Node(self.ROOT, None)
         self.__create_tree()
 
     def __create_tree(self):
@@ -108,13 +117,13 @@ class DictionaryTreeAnnotator(Annotator):
         """
         self.__split_and_stem(self._data)
 
-        max_length = self._data['length'].max()
+        max_length = self._data[self.LENGTH].max()
 
         for length in range(max_length):
-            list_with_length = self._data[self._data['length'] == length + 1]
+            list_with_length = self._data[self._data[self.LENGTH] == length + 1]
 
             for index, row in list_with_length.iterrows():
-                not_added = row['length']
+                not_added = row[self.LENGTH]
                 current_tree = self._tree
 
                 # add all terms that are not added to the tree
@@ -124,36 +133,36 @@ class DictionaryTreeAnnotator(Annotator):
                     term_found = False
 
                     # search if any node is added to the current subtree
-                    for term in row['split']:
+                    for term in row[self.SPLIT]:
 
                         # if the term is already added, jump over it
-                        if term["added"] is True:
+                        if term[self.ADDED] is True:
                             continue
 
                         for child in current_tree.get_children():
-                            if fuzz.ratio(child.get_term(), term["term"]) >= 75:
+                            if fuzz.ratio(child.get_term(), term[self.TERM]) >= 75:
                                 term_found = True
-                                term["added"] = True
+                                term[self.ADDED] = True
                                 current_tree = child
                                 break
 
                     # if no more terms are found in the subtree add
                     # all other terms to the tree
                     if term_found is False:
-                        for term in row['split']:
-                            if term["added"] is True:
+                        for term in row[self.SPLIT]:
+                            if term[self.ADDED] is True:
                                 continue
-                            node = Node(term["term"], current_tree)
+                            node = Node(term[self.TERM], current_tree)
                             current_tree.add_child(node)
                             current_tree = node
-                            term["added"] = True
+                            term[self.ADDED] = True
 
-                    not_added = reduce(lambda x, y: x + 1 if y['added'] is False else x, row['split'], 0)
+                    not_added = reduce(lambda x, y: x + 1 if y[self.ADDED] is False else x, row[self.SPLIT], 0)
 
                     # if all terms are added to the tree the hole term is on the tree, so mark the current
                     # node with the feature
                     if not_added == 0:
-                        current_tree.add_feature(row['feature'], row['feature_value'])
+                        current_tree.add_feature(row[Annotation.FEATURE], row[Annotation.FEATURE_VAL])
 
         # self._tree.print()
 
@@ -164,16 +173,16 @@ class DictionaryTreeAnnotator(Annotator):
         :param data: the dataframe that contains the dictionary
         """
         # split the list by a whitespace char
-        t = data['term'].apply(lambda x: x.split(' '))
+        t = data[self.TERM].apply(lambda x: x.split(' '))
 
         # remove words that are shorter or equal than 3 chars
         t = t.apply(lambda x: list(filter(lambda a: len(a) > 3, x)))
 
         # find the stemming of the remaining words
         t = t.apply(lambda x: list(map(self._stemmer.stem, x)))
-        t = t.apply(lambda x: list(map(lambda a: {'term': a, 'added': False}, x)))
-        data['split'] = t
-        data['length'] = data['split'].apply(lambda x: len(x))
+        t = t.apply(lambda x: list(map(lambda a: {self.TERM: a, self.ADDED: False}, x)))
+        data[self.SPLIT] = t
+        data[self.LENGTH] = data[self.SPLIT].apply(lambda x: len(x))
 
     def __token_sorting_key(self, token):
         """
@@ -190,7 +199,7 @@ class DictionaryTreeAnnotator(Annotator):
         # get all sentences from the document
         sentences = annotations[annotations[Annotation.LAYER] == Layer.SENTENCE]
 
-        #initialize the new annotations and relations table
+        # initialize the new annotations and relations table
         new_annotations = pd.DataFrame(columns=Annotation.COLS)
         new_relations = pd.DataFrame(columns=Relation.COLS)
 
@@ -204,21 +213,21 @@ class DictionaryTreeAnnotator(Annotator):
             end = sentence[Annotation.END]
             sentence_tokens = doc.get_tokens()[(doc.get_tokens()[Token.BEGIN] >= begin) &
                                                (doc.get_tokens()[Token.END] <= end) &
-                                               (doc.get_tokens()['pos_value'] != 'PUNCT')]
+                                               (doc.get_tokens()[Token.POS_VALUE] != 'PUNCT')]
 
             nodes_to_visit = list()
-            nodes_to_visit.append({'tree': self._tree, 'path': None})
+            nodes_to_visit.append({self.TREE: self._tree, self.PATH: None})
 
             while nodes_to_visit:
 
                 current_node = nodes_to_visit.pop()
                 current_path = list()
-                if current_node['path'] is not None:
-                    current_path = current_node['path']
+                if current_node[self.PATH] is not None:
+                    current_path = current_node[self.PATH]
 
                 # if the current node contains any feature_values, add all of them to the annotations table
-                if current_node['tree'].get_features():
-                    for current_feature in current_node['tree'].get_features():
+                if current_node[self.TREE].get_features():
+                    for current_feature in current_node[self.TREE].get_features():
                         last_id = None
                         current_path.sort(key=self.__token_sorting_key)
                         for idx, token in enumerate(current_path):
@@ -227,28 +236,28 @@ class DictionaryTreeAnnotator(Annotator):
                                 Annotation.BEGIN: token[Token.BEGIN],
                                 Annotation.END: token[Token.END],
                                 Annotation.LAYER: Layer.TUMOR,
-                                Annotation.FEATURE: current_feature['feature'],
-                                Annotation.FEATURE_VAL: current_feature['feature_value']
+                                Annotation.FEATURE: current_feature[Annotation.FEATURE],
+                                Annotation.FEATURE_VAL: current_feature[Annotation.FEATURE_VAL]
                             }, ignore_index=True)
                             if len(current_path) > 1 and idx > 0:
                                 new_relations = new_relations.append({
                                     Relation.GOV_ID: token[Token.ID],
                                     Relation.DEP_ID: last_id,
                                     Relation.BEGIN: token[Token.BEGIN],
-                                    Relation.FEATURE: current_feature['feature'],
-                                    Relation.FEATURE_VAL: current_feature['feature_value']
+                                    Relation.FEATURE: current_feature[Annotation.FEATURE],
+                                    Relation.FEATURE_VAL: current_feature[Annotation.FEATURE_VAL]
                                 }, ignore_index=True)
 
                             last_id = token[Token.ID]
 
                 for sentence_index, sentence_token_row in sentence_tokens.iterrows():
-                    text = self._stemmer.stem(sentence_token_row['text'])
+                    text = self._stemmer.stem(sentence_token_row[Token.TEXT])
 
                     # for short words the comparison score has to be higher than for long words
                     min_score_cutoff = 100 if len(text) < 4 else 80
 
                     # get all children that has matches
-                    match = process.extractOne(text, current_node['tree'].get_stemmed_children(),
+                    match = process.extractOne(text, current_node[self.TREE].get_stemmed_children(),
                                                score_cutoff=min_score_cutoff - 1)
 
                     # if no match was found test the next sentence
@@ -261,6 +270,6 @@ class DictionaryTreeAnnotator(Annotator):
 
                     # get the index in the datatable of the match
                     match_index = match[2]
-                    nodes_to_visit.append({'tree': current_node['tree'].get_children()[match_index], 'path': path})
+                    nodes_to_visit.append({self.TREE: current_node[self.TREE].get_children()[match_index], self.PATH: path})
 
         return new_annotations, new_relations
