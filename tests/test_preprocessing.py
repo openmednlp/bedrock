@@ -66,7 +66,8 @@ class TestPreprocessing(unittest.TestCase):
 
 
         # build preprocessing engine and start it
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator, dict_annotator], [postlabeling_annotator])
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator, dict_annotator],
+                                                   [postlabeling_annotator])
         preprocessing_engine.preprocess(txt_docs)
 
         for idx, doc in enumerate(txt_docs):
