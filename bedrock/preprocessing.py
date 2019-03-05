@@ -31,7 +31,10 @@ class PreprocessingEngine:
         if self.annotators is not None:
             for doc in docs:
                 for annotator in self.annotators:
-                    doc.append_annotions(annotator.get_annotations(doc))
+                    annotations, relations = annotator.get_annotations(doc)
+                    doc.append_annotions(annotations)
+                    if relations is not None:
+                        doc.append_relations(relations)
 
     def preprocess(self, docs: List[Doc]) -> List[Doc]:
         self.__set_tags(docs)
