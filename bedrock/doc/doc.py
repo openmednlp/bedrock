@@ -8,6 +8,7 @@ from pycas.type.cas import TypeSystemFactory
 from pycas.cas.core import CAS
 from pycas.cas.writer import XmiWriter
 from bedrock.common import uima, utils
+from typing import List
 
 
 class Doc:
@@ -61,10 +62,6 @@ class Doc:
         utils.save_pickle(self, file_path)
 
     def get_cas(self, typesystem_filepath):
-
-        # if self.__tokens.empty:
-        #     raise ValueError('tokens empty')
-
         type_system_factory = TypeSystemFactory.TypeSystemFactory()
         type_system = type_system_factory.readTypeSystem(typesystem_filepath)
         cas = CAS.CAS(type_system)
@@ -129,8 +126,23 @@ class Doc:
                 setattr(fs_anno, uima.DependencyFeatureNames.GOVERNOR, fs_governor)
 
                 # TODO add flavor feature ? "flavor":"basic"
-
         return cas
+
+    def get_wideformat(self, layers:List[str]) -> pd.DataFrame:
+        wideformat = self.__tokens.copy(deep=True)
+        for layer in layers:
+            feature_names = self.__annotations[
+                self.__annotations[Annotation.LAYER] == layer
+                ][Annotation.FEATURE].unique()
+            for feature_name in feature_names:
+                tmp = self.__annotations[(self.__annotations[Annotation.LAYER] == layer) &
+                                         (self.__annotations[Annotation.FEATURE] == feature_name)][
+                    [Annotation.BEGIN, Annotation.END, Annotation.FEATURE_VAL]
+                ]
+                tmp.rename(columns={Annotation.FEATURE_VAL: Layer.TUMOR + '.' + feature_name}, inplace=True)
+                wideformat = pd.merge(wideformat, tmp, on=[Relation.BEGIN, Relation.END], how='left')
+                wideformat = wideformat.replace({pd.np.nan: None})
+        return wideformat
 
     def write_xmi(self, file_name, typesystem_filepath):
         cas = self.get_cas(typesystem_filepath)
