@@ -72,9 +72,11 @@ class Doc:
         for _, annotation in self.__annotations.iterrows():
 
             layer = annotation[Annotation.LAYER]
+            fs_anno = None
 
             if layer == Layer.TOKEN:
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.TOKEN, {
+                    uima.ID: int(annotation[Annotation.ID]),
                     uima.BEGIN: int(annotation[Annotation.BEGIN]),
                     uima.END: int(annotation[Annotation.END])
                 })

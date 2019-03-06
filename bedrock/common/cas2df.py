@@ -17,13 +17,13 @@ class CAS2DataFrameConverter:
     def get_dataframes(cas):
         annotations = pd.DataFrame(columns=Annotation.COLS)
         relations = pd.DataFrame(columns=Relation.COLS)
-        ml_prepared = pd.DataFrame()
 
         for element in cas.getAnnotationIndex():
             layer = element.FStype.name.split('.')[-1]
 
             if element.FStype.name == 'uima.cas.Sofa':
                 cas_text = '"' + html.unescape(element.sofaString) + '"'
+                continue
 
             if len(element.getFeatures()) >= 1:
                 row = {}
