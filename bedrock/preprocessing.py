@@ -6,9 +6,11 @@ from bedrock.prelabel.annotator import Annotator
 
 class PreprocessingEngine:
 
-    def __init__(self, tagger: Tagger=None, annotators: List[Annotator] = None):
+    def __init__(self, tagger: Tagger = None, annotators: List[Annotator] = None,
+                 postlabeling_annotators: List[Annotator] = None):
         self.tagger = tagger
         self.annotators = annotators
+        self.postlabeling_annotators = postlabeling_annotators
 
     def __set_tags(self, docs: List[Doc]):
         if self.tagger is not None:
@@ -36,7 +38,17 @@ class PreprocessingEngine:
                     if relations is not None:
                         doc.append_relations(relations)
 
+    def __run_postlabeling(self, docs: List[Doc]):
+        if self.postlabeling_annotators is not None:
+            for doc in docs:
+                for post_annotator in self.postlabeling_annotators:
+                    annotations, relations = post_annotator.get_annotations(doc)
+                    doc.set_annotations(annotations)
+                    if relations is not None:
+                        doc.set_relations(relations)
+
     def preprocess(self, docs: List[Doc]) -> List[Doc]:
         self.__set_tags(docs)
         self.__set_annotations(docs)
+        self.__run_postlabeling(docs)
         return docs

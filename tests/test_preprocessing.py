@@ -1,7 +1,8 @@
 import unittest
 import os
 from bedrock.doc.docfactory import DocFactory
-from bedrock.prelabel.regexannotator import RegexAnnotator
+from bedrock.prelabel.regex_annotator import RegexAnnotator
+from bedrock.prelabel.postlabeling_annotator import PostlabelingAnnotator
 from bedrock.prelabel.dictionary_tree_annotator import DictionaryTreeAnnotator
 from bedrock.tagger.spacytagger import SpacyTagger
 from doc.layer import Layer
@@ -58,7 +59,15 @@ class TestPreprocessing(unittest.TestCase):
                                                  dictionary['referencedComponentId'].tolist(),
                                                  'fuzzy-dictionary-tree-labeler')
 
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator, dict_annotator])
+        # initialize post processing annotator
+        with open(os.getenv("POST_LABELING_RULES"), 'r') as f:
+            post_labeling_rules = json.loads(f.read())
+        postlabeling_annotator = PostlabelingAnnotator(post_labeling_rules)
+
+
+        # build preprocessing engine and start it
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator, dict_annotator],
+                                                   [postlabeling_annotator])
         preprocessing_engine.preprocess(txt_docs)
 
         for idx, doc in enumerate(txt_docs):
