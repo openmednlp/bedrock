@@ -1,5 +1,6 @@
 # TODO use TypeSystem as better alternative to assigne to set the correct values
 
+ID = 'id'
 BEGIN = 'begin'
 END = 'end'
 

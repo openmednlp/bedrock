@@ -15,16 +15,15 @@ class CAS2DataFrameConverter:
 
     # Generates panda df from the UIMA CAS: tokens, annotations, relations, uima (combined)
     def get_dataframes(cas):
-        tokens = pd.DataFrame(columns=Token.COLS)
         annotations = pd.DataFrame(columns=Annotation.COLS)
         relations = pd.DataFrame(columns=Relation.COLS)
-        ml_prepared = pd.DataFrame()
 
         for element in cas.getAnnotationIndex():
             layer = element.FStype.name.split('.')[-1]
 
             if element.FStype.name == 'uima.cas.Sofa':
                 cas_text = '"' + html.unescape(element.sofaString) + '"'
+                continue
 
             if len(element.getFeatures()) >= 1:
                 row = {}
@@ -39,7 +38,7 @@ class CAS2DataFrameConverter:
                                 # TODO handle multiple values per UIMA feature
                                 raise ValueError('UIMA features with multiple values not handled')
                             fval = fval[0]
-                        if layer == Layer.POS:
+                        if layer == Layer.POS:  # TODO instead of if .. elif => iterate through layers
                             if fname == uima.PosFeatureNames.POS_VALUE:
                                 row[Annotation.FEATURE] = Token.POS_VALUE
                                 row[Annotation.FEATURE_VAL] = fval
@@ -57,7 +56,7 @@ class CAS2DataFrameConverter:
 
                 row[Annotation.ID] = int(element.FSid)
                 row[Annotation.LAYER] = layer
-                if layer in Layer.TOKEN:
+                if layer in Layer.TOKEN:  # TODO instead of if .. elif => iterate through layers
                     row[Annotation.FEATURE] = Token.TEXT
                     row[Annotation.FEATURE_VAL] = cas_text[row[Annotation.BEGIN]+1:row[Annotation.END]+1]
                     annotations = annotations.append(row, ignore_index=True)
@@ -71,49 +70,33 @@ class CAS2DataFrameConverter:
                     relations = relations.append(row, ignore_index=True)
                 elif layer == Layer.TUMOR:
                     annotations = annotations.append(row, ignore_index=True)
-                # elif layer in [Layer.TUMOR_RELATION]:
+                elif layer in [Layer.TUMOR_RELATION]:
+                    raise ValueError('Layer '+layer+' not yet implemented')
 
-        # sentence_df = tokens[tokens['feature_type'] == 'Sentence']
-        # sentence_df.loc[:, 'sent_id'] = sentence_df['sofa_id'].astype('category').cat.codes
-        #
-        # # output token list with added info annotation
-        # ml_prepared = tokens[tokens['feature_type'] == 'Token']
-        # ml_prepared.loc[:, 'token_id'] = range(0, len(ml_prepared))
-        # ml_prepared.loc[:, 'text'] = ''
-        # ml_prepared.set_index('token_id')
-        #
-        # sqlsentid = '''
-        #     select uima.*, sent.sent_id
-        #     from ml_prepared uima
-        #     left join sentence_df sent
-        #     on uima.begin >= sent.begin
-        #     and uima.begin <= sent.end
-        #     '''
-        #
-        # ml_prepared = ps.sqldf(sqlsentid, locals())
-        #
-        # # TODO check bounderies in join, left join??
-        # if annotations.empty == False:
-        #     sqlanno = '''
-        #             select anno.class_name, anno.layer,
-        #             uima.token_id,
-        #             group_concat(feature_name) feature_name
-        #             from annotations anno
-        #             inner join ml_prepared uima
-        #             on anno.begin < uima.end
-        #             and anno.end > uima.begin
-        #             group by token_id, class_name, layer
-        #             '''
-        #     anno_token_df = ps.sqldf(sqlanno, locals())
-        #     anno_token_df.loc[:, 'col_pivot'] = anno_token_df['layer'] + "." + anno_token_df['class_name']
-        #
-        #     t1 = anno_token_df.pivot(index='token_id', values='feature_name',
-        #                              columns='col_pivot')
-        #     ml_prepared = ml_prepared.merge(t1, left_on='token_id', right_index=True, how='left')
-        #
-        # # add text to token list
-        # for i, row in ml_prepared.iterrows():
-        #     ml_prepared.loc[i, 'text'] = cas_text[int(ml_prepared['begin'].iloc[i] + 1):int(ml_prepared['end'].iloc[i] + 1)]
+        tokens = annotations[
+            (annotations[Annotation.LAYER] == Layer.TOKEN) & (annotations[Annotation.FEATURE] == Token.TEXT)
+        ][[Annotation.ID, Annotation.BEGIN, Annotation.END, Annotation.FEATURE_VAL]]
+        tokens.reset_index(inplace=True, drop=True)
+        tokens.rename(columns={Annotation.FEATURE_VAL: Token.TEXT}, inplace=True)
 
-        # TODO add dependency info to ml_prepared, maybe tokens not necessary as output
-        return ml_prepared, tokens, annotations, relations
+        pos_annotations = annotations[
+            (annotations[Annotation.LAYER] == Layer.POS) & (annotations[Annotation.FEATURE] == Token.POS_VALUE)
+        ][[Annotation.BEGIN, Annotation.END, Annotation.FEATURE_VAL]]  # TODO ID could be added if needed
+        pos_annotations.rename(columns={Annotation.FEATURE_VAL: Token.POS_VALUE}, inplace=True)
+
+        tokens = pd.merge(tokens, pos_annotations, on=[Annotation.BEGIN, Annotation.END], how='left')
+
+        sentence_annotations = annotations[
+            annotations[Annotation.LAYER] == Layer.SENTENCE
+            ][[Annotation.BEGIN]]  # TODO ID could be added if needed
+        sentence_annotations.loc[:, Token.SENT_START] = True
+        tokens = pd.merge(tokens, sentence_annotations, on=[Annotation.BEGIN], how='left')
+
+        dependency_annotations = relations[
+            (relations[Relation.LAYER] == Layer.DEPENDENCY) & (relations[Relation.FEATURE] == Token.DEP_TYPE)
+        ][[Relation.BEGIN, Relation.END, Relation.FEATURE_VAL, Token.GOV_ID]]
+        dependency_annotations.rename(columns={Annotation.FEATURE_VAL: Token.DEP_TYPE}, inplace=True)
+        tokens = pd.merge(tokens, dependency_annotations, on=[Relation.BEGIN, Relation.END], how='left')
+        tokens = tokens.replace({pd.np.nan: None})
+
+        return tokens, annotations, relations
