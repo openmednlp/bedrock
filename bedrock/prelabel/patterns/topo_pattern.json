@@ -1,0 +1,28 @@
+{ 
+ "body_structure": {
+    "organ": {
+      "description": "Topology",
+      "regex": "(Lung|Bronch[ien|us|iolen]|Oberlappen|Unterlappen|Hilus|Parenchym|pulmonal|Lymphknot[e|en]|Haut|Sigmoid|Rekturm|Dickdarm)",
+      "tag_name": "topo_part",
+      "xmi_property": "topo"
+    },
+     "organ2": {
+      "description": "Topology",
+      "regex": "([K|C]olon)",
+      "tag_name": "topo_part",
+      "xmi_property": "topo"
+    },
+   "site_desc": {
+      "description": "General site descriptor 272425003",
+      "regex": "(anterior|apical|basal|caudal|distal|dorsal|dorsolateral|dorsoventral|inferior|lateral|posterior|proximal|segmental|superior|ventral)",
+      "tag_name": "site_description",
+      "xmi_property": "topo"
+    },
+    "topo_modifier": {
+      "description": "Topographical modifier 106233006",
+      "regex": "(recht[s|en]|link[s|en]|unte[n|ren]|obe[n|ren])",
+      "tag_name": "topo_modifier",
+      "xmi_property": "topo"
+    }
+  }
+}

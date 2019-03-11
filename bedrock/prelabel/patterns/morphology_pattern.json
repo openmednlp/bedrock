@@ -1,0 +1,18 @@
+{
+"Morphology": {
+    "morph": {
+      "description": "Morphology cancer",
+      "regex": "(Aden[o|om]|[C|K|c|k]ar[c|z]inom|Sar[c|k]om|Lymphom|[t|T]umour|[t|T]umor|Melanom|Blastom|Basalioma|Neurofibrom|Neoplasie|Metastas[e|en][a]{0,1})",
+      "tag_name": "morph",
+      "xmi_property": "morph"
+    }
+  },
+   "MorphologyI": {
+    "morph": {
+      "description": "Morphology",
+      "regex": "(Plattenepithel|Parenchym|Basalzellkarzinom)",
+      "tag_name": "morph",
+      "xmi_property": "morph"
+    }
+  }
+}
