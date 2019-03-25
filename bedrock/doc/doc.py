@@ -147,28 +147,30 @@ class Doc:
 
         if self.__annotations.empty == False:
 
-            anno = self.__annotations
-            token = self.__tokens
+            annotations = self.__annotations
+            tokens = self.__tokens
             tmp_col_name = 'feature_value_con'
 
-            sqlanno = ''.join(['select anno.layer, anno.' , Annotation.FEATURE , ', token.' , \
+            sqlanno = ''.join(['select annotations.layer, annotations.' , Annotation.FEATURE , ', tokens.' , \
                          Token.ID , ',group_concat(' , Annotation.FEATURE_VAL, ') ' , tmp_col_name , ' ', \
-                        'from anno anno inner join token token on anno.' , Annotation.BEGIN , \
-                        ' < token.' , Token.END , ' and anno.' , Annotation.END , ' > token.' , Token.BEGIN , \
-                        ' where anno.', Annotation.LAYER ,' NOT IN ("POS","Token", "Sentence") ' ,
-                        ' group by token.' , Token.ID , ', ' , Annotation.LAYER , ', ' , Annotation.FEATURE])
+                        'from annotations annotations inner join tokens tokens on annotations.' , Annotation.BEGIN , \
+                        ' < tokens.' , Token.END , ' and annotations.' , Annotation.END , ' > tokens.' , Token.BEGIN , \
+                        ' where annotations.', Annotation.LAYER ,' NOT IN ("POS","Token", "Sentence") ' ,
+                        ' group by tokens.' , Token.ID , ', ' , Annotation.LAYER , ', ' , Annotation.FEATURE])
 
-            tmp_anno_token_df = pdsql.sqldf(sqlanno, locals())
-            tmp_anno_token_df.loc[:, 'col_pivot'] = tmp_anno_token_df[Annotation.LAYER] + "." + \
-                                                    tmp_anno_token_df[Annotation.FEATURE].fillna('')
+            tmp_annotations_tokens_df = pdsql.sqldf(sqlanno, locals())
+            tmp_annotations_tokens_df.loc[:, 'col_pivot'] = tmp_annotations_tokens_df[Annotation.LAYER] + "." + \
+                                                    tmp_annotations_tokens_df[Annotation.FEATURE].fillna('')
 
-            tmp_anno_token_piv_df = tmp_anno_token_df.pivot(index='id', values=tmp_col_name, columns='col_pivot')
+            tmp_annotations_tokens_piv_df = tmp_annotations_tokens_df.pivot(index='id', values=tmp_col_name,
+                                                                            columns='col_pivot')
 
-            wideformat = token.merge(tmp_anno_token_piv_df, left_on='id', right_index=True, how='left')
+            wideformat = tokens.merge(tmp_annotations_tokens_piv_df, left_on='id', right_index=True, how='left')
             wideformat.insert(0, 'doc_id', self.get_filename())
 
+            return wideformat
 
-        return wideformat
+        return None
 
     def write_xmi(self, file_name, typesystem_filepath):
         cas = self.get_cas(typesystem_filepath)
