@@ -6,7 +6,7 @@ import pandas as pd
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
 from nltk.stem.cistem import Cistem
-
+import _pickle as pickle
 
 # Node class to generate a tree of words to reduce the search space, e.g. if we have to search for the terms
 # 'small eyes' and 'small ears', and the algorithm could not find small in a sentence, all dictionary entries with
@@ -96,21 +96,29 @@ class DictionaryTreeAnnotator(Annotator):
     ADDED = 'added'
     PATH = 'path'
 
-    def __init__(self, terms: List[str], features: List[str], feature_values: List[str], origin: str):
-        if len(terms) != len(feature_values) or len(feature_values) != len(features):
+    def __init__(self, origin: str, terms: List[str] = None, features: List[str] = None,
+                 feature_values: List[str] = None, saved_tree_path: str = None):
+
+        if saved_tree_path is None and (len(terms) != len(feature_values) or len(feature_values) != len(features)):
             raise Exception('Lengths of terms, feature values and features vary.')
+
         self._origin = origin
-        self._data = pd.DataFrame(
-            {
-                self.TERM: terms,
-                Annotation.FEATURE_VAL: feature_values,
-                Annotation.FEATURE: features
-            }
-        )
-        self._features_values = feature_values
         self._stemmer = Cistem()
-        self._tree = Node(self.ROOT, None)
-        self.__create_tree()
+
+        if saved_tree_path is None:
+            self._data = pd.DataFrame(
+                {
+                    self.TERM: terms,
+                    Annotation.FEATURE_VAL: feature_values,
+                    Annotation.FEATURE: features
+                }
+            )
+            self._features_values = feature_values
+            self._tree = Node(self.ROOT, None)
+            self.__create_tree()
+        else:
+            with open(saved_tree_path, 'rb') as pickle_in:
+                self._tree = pickle.load(pickle_in)
 
     def __create_tree(self):
         """ create_tree will establish the tree for more efficient term searching
@@ -170,7 +178,7 @@ class DictionaryTreeAnnotator(Annotator):
     def __split_and_stem(self, data: pd.DataFrame):
         """
         split_and_stem will split the terms in the dictionary to get words and stem them
-        :param data: the dataframe that contains the dictionary
+        :param data: the data frame that contains the dictionary
         """
         # split the list by a whitespace char
         t = data[self.TERM].apply(lambda x: x.split(' '))
@@ -191,6 +199,10 @@ class DictionaryTreeAnnotator(Annotator):
         :returns the begin field in a token
         """
         return token[Token.BEGIN]
+
+    def save_dictionary(self, path: str):
+        with open(path, 'wb') as pickle_file:
+            pickle.dump(self._tree, pickle_file)
 
     def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
 
