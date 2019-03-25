@@ -131,25 +131,7 @@ class Doc:
                 # TODO add flavor feature ? "flavor":"basic"
         return cas
 
-    def get_wideformat(self, layers:List[str]) -> pd.DataFrame:
-        #ToDo file name, sentence number
-        wideformat = self.__tokens.copy(deep=True)
-        for layer in layers:
-            feature_names = self.__annotations[
-                self.__annotations[Annotation.LAYER] == layer
-                ][Annotation.FEATURE].unique()
-            for feature_name in feature_names:
-                tmp = self.__annotations[(self.__annotations[Annotation.LAYER] == layer) &
-                                         (self.__annotations[Annotation.FEATURE] == feature_name)][
-                    [Annotation.BEGIN, Annotation.END, Annotation.FEATURE_VAL]
-                ]
-                tmp.rename(columns={Annotation.FEATURE_VAL: Layer.TUMOR + '.' + feature_name}, inplace=True)
-
-                wideformat = pd.merge(wideformat, tmp, on=[Relation.BEGIN, Relation.END], how='left')
-                wideformat = wideformat.replace({pd.np.nan: None})
-        return wideformat
-
-    def get_wideformat_all(self):
+    def get_wideformat(self):
         '''
 
               :ivar: tokens and annotations class members
@@ -169,7 +151,7 @@ class Doc:
             token = self.__tokens
             tmp_col_name = 'feature_value_con'
 
-            sqlanno =''.join(['select anno.layer, anno.' , Annotation.FEATURE , ', token.' , \
+            sqlanno = ''.join(['select anno.layer, anno.' , Annotation.FEATURE , ', token.' , \
                          Token.ID , ',group_concat(' , Annotation.FEATURE_VAL, ') ' , tmp_col_name , ' ', \
                         'from anno anno inner join token token on anno.' , Annotation.BEGIN , \
                         ' < token.' , Token.END , ' and anno.' , Annotation.END , ' > token.' , Token.BEGIN , \
