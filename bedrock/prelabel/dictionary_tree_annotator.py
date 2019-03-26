@@ -164,7 +164,7 @@ class DictionaryTreeAnnotator(Annotator):
                     if not_added == 0:
                         current_tree.add_feature(row[Annotation.FEATURE], row[Annotation.FEATURE_VAL])
 
-        # self._tree.print()
+        self._tree.print()
 
     # adds split column with split and stemmed terms
     def __split_and_stem(self, data: pd.DataFrame):
@@ -270,6 +270,7 @@ class DictionaryTreeAnnotator(Annotator):
 
                     # get the index in the datatable of the match
                     match_index = match[2]
-                    nodes_to_visit.append({self.TREE: current_node[self.TREE].get_children()[match_index], self.PATH: path})
+                    nodes_to_visit.append({self.TREE: current_node[self.TREE].get_children()[match_index],
+                                           self.PATH: path})
 
         return new_annotations, new_relations

@@ -9,8 +9,6 @@ from pycas.type.cas import TypeSystemFactory
 from pycas.cas.core import CAS
 from pycas.cas.writer import XmiWriter
 from bedrock.common import uima, utils
-from typing import List
-
 
 class Doc:
 
@@ -145,7 +143,7 @@ class Doc:
               :return: table of tokens and their annotations in wide format
               '''
 
-        if self.__annotations.empty == False:
+        if self.__annotations.empty is False:
 
             annotations = self.__annotations
             tokens = self.__tokens
@@ -159,6 +157,7 @@ class Doc:
                         ' group by tokens.' , Token.ID , ', ' , Annotation.LAYER , ', ' , Annotation.FEATURE])
 
             tmp_annotations_tokens_df = pdsql.sqldf(sqlanno, locals())
+            print(tmp_annotations_tokens_df)
             tmp_annotations_tokens_df.loc[:, 'col_pivot'] = tmp_annotations_tokens_df[Annotation.LAYER] + "." + \
                                                     tmp_annotations_tokens_df[Annotation.FEATURE].fillna('')
 
