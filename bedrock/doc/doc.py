@@ -1,5 +1,4 @@
 import pandas as pd
-import pandasql as pdsql
 
 from doc.annotation import Annotation
 from doc.layer import Layer
@@ -145,29 +144,40 @@ class Doc:
 
         if self.__annotations.empty is False:
 
-            annotations = self.__annotations
-            tokens = self.__tokens
-            tmp_col_name = 'feature_value_con'
+            pivot_name = 'col_pivot'
+            doc_id_name = 'doc_id'
+            pos_label = 'POS'
+            token_label = 'Token'
+            sentence_label = 'Sencente'
 
-            sqlanno = ''.join(['select annotations.layer, annotations.' , Annotation.FEATURE , ', tokens.' , \
-                         Token.ID , ',group_concat(' , Annotation.FEATURE_VAL, ') ' , tmp_col_name , ' ', \
-                        'from annotations annotations inner join tokens tokens on annotations.' , Annotation.BEGIN , \
-                        ' < tokens.' , Token.END , ' and annotations.' , Annotation.END , ' > tokens.' , Token.BEGIN , \
-                        ' where annotations.', Annotation.LAYER ,' NOT IN ("POS","Token", "Sentence") ' ,
-                        ' group by tokens.' , Token.ID , ', ' , Annotation.LAYER , ', ' , Annotation.FEATURE])
+            # save all annotations that belong to a token
+            extended_annotations = pd.DataFrame()
 
-            tmp_annotations_tokens_df = pdsql.sqldf(sqlanno, locals())
-            print(tmp_annotations_tokens_df)
-            tmp_annotations_tokens_df.loc[:, 'col_pivot'] = tmp_annotations_tokens_df[Annotation.LAYER] + "." + \
-                                                    tmp_annotations_tokens_df[Annotation.FEATURE].fillna('')
+            for index, token in self.get_tokens().iterrows():
+                annotations = self.get_annotations()[(self.get_annotations()[Annotation.BEGIN] < token[Token.END]) &
+                                                     (self.get_annotations()[Annotation.END] > token[Token.BEGIN]) &
+                                                     (~self.get_annotations()[Annotation.LAYER].isin([pos_label,
+                                                                                                      token_label,
+                                                                                                      sentence_label]))]\
+                    .copy()
+                annotations[Token.ID] = token[Token.ID]
+                extended_annotations = extended_annotations.append(annotations)
 
-            tmp_annotations_tokens_piv_df = tmp_annotations_tokens_df.pivot(index='id', values=tmp_col_name,
-                                                                            columns='col_pivot')
+            tmp_annotations_token_df = extended_annotations.groupby([Token.ID, Annotation.LAYER, Annotation.FEATURE]) \
+                .apply(lambda y: ','.join(list(map(lambda x: str(x), list(y[Annotation.FEATURE_VAL]))))) \
+                .reset_index(name=Annotation.FEATURE_VAL)
 
-            wideformat = tokens.merge(tmp_annotations_tokens_piv_df, left_on='id', right_index=True, how='left')
-            wideformat.insert(0, 'doc_id', self.get_filename())
+            tmp_annotations_token_df.loc[:, pivot_name] = tmp_annotations_token_df[Annotation.LAYER] + "." + \
+                                                          tmp_annotations_token_df[Annotation.FEATURE].fillna('')
 
-            return wideformat
+            tmp_annotations_token_df = tmp_annotations_token_df.pivot(index=Token.ID, values=Annotation.FEATURE_VAL,
+                                                                      columns=pivot_name)
+
+            wide_format = self.get_tokens().merge(tmp_annotations_token_df, left_on=Token.ID, right_index=True,
+                                                  how='left')
+            wide_format.insert(0, doc_id_name, self.get_filename())
+
+            return wide_format
 
         return None
 
