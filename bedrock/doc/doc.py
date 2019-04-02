@@ -148,7 +148,7 @@ class Doc:
             doc_id_name = 'doc_id'
             pos_label = 'POS'
             token_label = 'Token'
-            sentence_label = 'Sencente'
+            sentence_label = 'Sentence'
 
             # save all annotations that belong to a token
             extended_annotations = pd.DataFrame()
