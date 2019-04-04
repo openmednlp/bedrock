@@ -1,5 +1,4 @@
 import pandas as pd
-import pandasql as pdsql
 
 from doc.annotation import Annotation
 from doc.layer import Layer
@@ -9,8 +8,6 @@ from pycas.type.cas import TypeSystemFactory
 from pycas.cas.core import CAS
 from pycas.cas.writer import XmiWriter
 from bedrock.common import uima, utils
-from typing import List
-
 
 class Doc:
 
@@ -131,25 +128,7 @@ class Doc:
                 # TODO add flavor feature ? "flavor":"basic"
         return cas
 
-    def get_wideformat(self, layers:List[str]) -> pd.DataFrame:
-        #ToDo file name, sentence number
-        wideformat = self.__tokens.copy(deep=True)
-        for layer in layers:
-            feature_names = self.__annotations[
-                self.__annotations[Annotation.LAYER] == layer
-                ][Annotation.FEATURE].unique()
-            for feature_name in feature_names:
-                tmp = self.__annotations[(self.__annotations[Annotation.LAYER] == layer) &
-                                         (self.__annotations[Annotation.FEATURE] == feature_name)][
-                    [Annotation.BEGIN, Annotation.END, Annotation.FEATURE_VAL]
-                ]
-                tmp.rename(columns={Annotation.FEATURE_VAL: Layer.TUMOR + '.' + feature_name}, inplace=True)
-
-                wideformat = pd.merge(wideformat, tmp, on=[Relation.BEGIN, Relation.END], how='left')
-                wideformat = wideformat.replace({pd.np.nan: None})
-        return wideformat
-
-    def get_wideformat_all(self):
+    def get_wideformat(self):
         '''
 
               :ivar: tokens and annotations class members
@@ -163,30 +142,44 @@ class Doc:
               :return: table of tokens and their annotations in wide format
               '''
 
-        if self.__annotations.empty == False:
+        if self.__annotations.empty is False:
 
-            anno = self.__annotations
-            token = self.__tokens
-            tmp_col_name = 'feature_value_con'
+            pivot_name = 'col_pivot'
+            doc_id_name = 'doc_id'
+            pos_label = 'POS'
+            token_label = 'Token'
+            sentence_label = 'Sentence'
 
-            sqlanno =''.join(['select anno.layer, anno.' , Annotation.FEATURE , ', token.' , \
-                         Token.ID , ',group_concat(' , Annotation.FEATURE_VAL, ') ' , tmp_col_name , ' ', \
-                        'from anno anno inner join token token on anno.' , Annotation.BEGIN , \
-                        ' < token.' , Token.END , ' and anno.' , Annotation.END , ' > token.' , Token.BEGIN , \
-                        ' where anno.', Annotation.LAYER ,' NOT IN ("POS","Token", "Sentence") ' ,
-                        ' group by token.' , Token.ID , ', ' , Annotation.LAYER , ', ' , Annotation.FEATURE])
+            # save all annotations that belong to a token
+            extended_annotations = pd.DataFrame()
 
-            tmp_anno_token_df = pdsql.sqldf(sqlanno, locals())
-            tmp_anno_token_df.loc[:, 'col_pivot'] = tmp_anno_token_df[Annotation.LAYER] + "." + \
-                                                    tmp_anno_token_df[Annotation.FEATURE].fillna('')
+            for index, token in self.get_tokens().iterrows():
+                annotations = self.get_annotations()[(self.get_annotations()[Annotation.BEGIN] < token[Token.END]) &
+                                                     (self.get_annotations()[Annotation.END] > token[Token.BEGIN]) &
+                                                     (~self.get_annotations()[Annotation.LAYER].isin([pos_label,
+                                                                                                      token_label,
+                                                                                                      sentence_label]))]\
+                    .copy()
+                annotations[Token.ID] = token[Token.ID]
+                extended_annotations = extended_annotations.append(annotations)
 
-            tmp_anno_token_piv_df = tmp_anno_token_df.pivot(index='id', values=tmp_col_name, columns='col_pivot')
+            tmp_annotations_token_df = extended_annotations.groupby([Token.ID, Annotation.LAYER, Annotation.FEATURE]) \
+                .apply(lambda y: ','.join(list(map(lambda x: str(x), list(y[Annotation.FEATURE_VAL]))))) \
+                .reset_index(name=Annotation.FEATURE_VAL)
 
-            wideformat = token.merge(tmp_anno_token_piv_df, left_on='id', right_index=True, how='left')
-            wideformat.insert(0, 'doc_id', self.get_filename())
+            tmp_annotations_token_df.loc[:, pivot_name] = tmp_annotations_token_df[Annotation.LAYER] + "." + \
+                                                          tmp_annotations_token_df[Annotation.FEATURE].fillna('')
 
+            tmp_annotations_token_df = tmp_annotations_token_df.pivot(index=Token.ID, values=Annotation.FEATURE_VAL,
+                                                                      columns=pivot_name)
 
-        return wideformat
+            wide_format = self.get_tokens().merge(tmp_annotations_token_df, left_on=Token.ID, right_index=True,
+                                                  how='left')
+            wide_format.insert(0, doc_id_name, self.get_filename())
+
+            return wide_format
+
+        return None
 
     def write_xmi(self, file_name, typesystem_filepath):
         cas = self.get_cas(typesystem_filepath)

@@ -1,15 +1,10 @@
 import pandas as pd
 import html
-from pycas.cas.core import FeatureStructure, CAS
-from pycas.type.cas.TypeDescription import TypeDescription
-import pandasql as ps
 from doc.relation import Relation
 from doc.annotation import Annotation
 from doc.token import Token
 from doc.layer import Layer
 from bedrock.common import uima
-from bedrock.common import utils
-
 
 class CAS2DataFrameConverter:
 

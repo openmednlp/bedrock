@@ -78,7 +78,7 @@ class TestPreprocessing(unittest.TestCase):
 
         for idx, doc in enumerate(txt_docs):
             filename = txt_filenames[idx].split('.')
-            print(doc.get_wideformat([Layer.TUMOR]))
+            print(doc.get_wideformat())
             doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
 
         for idx, doc in enumerate(xmi_docs):
