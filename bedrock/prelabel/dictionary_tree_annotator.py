@@ -6,6 +6,7 @@ import pandas as pd
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
 from nltk.stem.cistem import Cistem
+import _pickle as pickle
 
 
 # Node class to generate a tree of words to reduce the search space, e.g. if we have to search for the terms
@@ -96,21 +97,30 @@ class DictionaryTreeAnnotator(Annotator):
     ADDED = 'added'
     PATH = 'path'
 
-    def __init__(self, terms: List[str], features: List[str], feature_values: List[str], origin: str):
-        if len(terms) != len(feature_values) or len(feature_values) != len(features):
+    def __init__(self, origin: str, terms: List[str] = None, features: List[str] = None,
+                 feature_values: List[str] = None, saved_tree_path: str = None, print_progress: bool = False):
+
+        if saved_tree_path is None and (len(terms) != len(feature_values) or len(feature_values) != len(features)):
             raise Exception('Lengths of terms, feature values and features vary.')
+
+        self._print_progress = print_progress
         self._origin = origin
-        self._data = pd.DataFrame(
-            {
-                self.TERM: terms,
-                Annotation.FEATURE_VAL: feature_values,
-                Annotation.FEATURE: features
-            }
-        )
-        self._features_values = feature_values
         self._stemmer = Cistem()
-        self._tree = Node(self.ROOT, None)
-        self.__create_tree()
+
+        if saved_tree_path is None:
+            self._data = pd.DataFrame(
+                {
+                    self.TERM: terms,
+                    Annotation.FEATURE_VAL: feature_values,
+                    Annotation.FEATURE: features
+                }
+            )
+            self._features_values = feature_values
+            self._tree = Node(self.ROOT, None)
+            self.__create_tree()
+        else:
+            with open(saved_tree_path, 'rb') as pickle_in:
+                self._tree = pickle.load(pickle_in)
 
     def __create_tree(self):
         """ create_tree will establish the tree for more efficient term searching
@@ -119,12 +129,19 @@ class DictionaryTreeAnnotator(Annotator):
 
         max_length = self._data[self.LENGTH].max()
 
+        # number of added concepts for printing
+        number_added_concepts = 0
+        number_of_concepts = len(self._data.index)
         for length in range(max_length):
             list_with_length = self._data[self._data[self.LENGTH] == length + 1]
 
             for index, row in list_with_length.iterrows():
                 not_added = row[self.LENGTH]
                 current_tree = self._tree
+                if self._print_progress is True:
+                    number_added_concepts += 1
+                    self.__progress(number_added_concepts, number_of_concepts,
+                                    '{} / {}'.format(number_added_concepts, number_of_concepts))
 
                 # add all terms that are not added to the tree
                 while not_added > 0:
@@ -139,12 +156,17 @@ class DictionaryTreeAnnotator(Annotator):
                         if term[self.ADDED] is True:
                             continue
 
-                        for child in current_tree.get_children():
-                            if fuzz.ratio(child.get_term(), term[self.TERM]) >= 75:
-                                term_found = True
-                                term[self.ADDED] = True
-                                current_tree = child
-                                break
+                        match = process.extractOne(term[self.TERM], current_tree.get_stemmed_children(),
+                                                   scorer=fuzz.ratio,
+                                                   score_cutoff=85)
+
+                        # if no match was found test the next sentence
+                        if match is None:
+                            continue
+
+                        term_found = True
+                        term[self.ADDED] = True
+                        current_tree = current_tree.get_children()[match[2]]
 
                     # if no more terms are found in the subtree add
                     # all other terms to the tree
@@ -164,19 +186,17 @@ class DictionaryTreeAnnotator(Annotator):
                     if not_added == 0:
                         current_tree.add_feature(row[Annotation.FEATURE], row[Annotation.FEATURE_VAL])
 
-        # self._tree.print()
-
     # adds split column with split and stemmed terms
     def __split_and_stem(self, data: pd.DataFrame):
         """
         split_and_stem will split the terms in the dictionary to get words and stem them
-        :param data: the dataframe that contains the dictionary
+        :param data: the data frame that contains the dictionary
         """
         # split the list by a whitespace char
         t = data[self.TERM].apply(lambda x: x.split(' '))
 
         # remove words that are shorter or equal than 3 chars
-        t = t.apply(lambda x: list(filter(lambda a: len(a) > 3, x)))
+        t = t.apply(lambda x: list(filter(lambda a: len(a) > 2, x)))
 
         # find the stemming of the remaining words
         t = t.apply(lambda x: list(map(self._stemmer.stem, x)))
@@ -191,6 +211,20 @@ class DictionaryTreeAnnotator(Annotator):
         :returns the begin field in a token
         """
         return token[Token.BEGIN]
+
+    def save_dictionary(self, path: str):
+        with open(path, 'wb') as pickle_file:
+            pickle.dump(self._tree, pickle_file)
+
+    def print_dictionary_tree(self):
+        self._tree.print()
+
+    def __progress(self, count: int, total: int, suffix=''):
+        bar_len = 60
+        filled_len = int(round(bar_len * count / float(total)))
+        percents = round(100.0 * count / float(total), 1)
+        bar = '=' * filled_len + '-' * (bar_len - filled_len)
+        print('[{}] {}{} ...{}\r'.format(bar, percents, '%', suffix), end='', flush=True)
 
     def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
 
@@ -218,7 +252,7 @@ class DictionaryTreeAnnotator(Annotator):
             nodes_to_visit = list()
             nodes_to_visit.append({self.TREE: self._tree, self.PATH: None})
 
-            while nodes_to_visit:
+            while len(nodes_to_visit) > 0:
 
                 current_node = nodes_to_visit.pop()
                 current_path = list()
@@ -226,7 +260,8 @@ class DictionaryTreeAnnotator(Annotator):
                     current_path = current_node[self.PATH]
 
                 # if the current node contains any feature_values, add all of them to the annotations table
-                if current_node[self.TREE].get_features():
+                if len(current_node[self.TREE].get_features()) > 0:
+
                     for current_feature in current_node[self.TREE].get_features():
                         last_id = None
                         current_path.sort(key=self.__token_sorting_key)
@@ -254,22 +289,23 @@ class DictionaryTreeAnnotator(Annotator):
                     text = self._stemmer.stem(sentence_token_row[Token.TEXT])
 
                     # for short words the comparison score has to be higher than for long words
-                    min_score_cutoff = 100 if len(text) < 4 else 80
+                    min_score_cutoff = 100 if len(text) < 5 else 85
 
                     # get all children that has matches
-                    match = process.extractOne(text, current_node[self.TREE].get_stemmed_children(),
+                    match = process.extractOne(text, current_node[self.TREE].get_stemmed_children(), scorer=fuzz.ratio,
                                                score_cutoff=min_score_cutoff - 1)
 
                     # if no match was found test the next sentence
                     if match is None:
                         continue
 
-                    # if a match was found copy the current path and add the own token to it
-                    path = [i for i in current_path]
+                    # if a match was found copy the current path and add the matched token to it
+                    path = current_path.copy()
                     path.append(sentence_token_row)
 
-                    # get the index in the datatable of the match
+                    # get the index in the data table of the match
                     match_index = match[2]
-                    nodes_to_visit.append({self.TREE: current_node[self.TREE].get_children()[match_index], self.PATH: path})
+                    nodes_to_visit.append({self.TREE: current_node[self.TREE].get_children()[match_index],
+                                           self.PATH: path})
 
         return new_annotations, new_relations

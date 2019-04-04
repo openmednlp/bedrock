@@ -54,10 +54,16 @@ class TestPreprocessing(unittest.TestCase):
         dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
         dictionary = dictionary[dictionary['languageCode'] == 'de']
         dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
-        dict_annotator = DictionaryTreeAnnotator(dictionary['term'].tolist(),
+        dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler', dictionary['term'].tolist(),
                                                  dictionary['Group'].tolist(),
-                                                 dictionary['referencedComponentId'].tolist(),
-                                                 'fuzzy-dictionary-tree-labeler')
+                                                 dictionary['referencedComponentId'].tolist())
+
+        # load the dictionary from a pickle file
+        # dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler',
+        #                                         saved_tree_path=os.getenv('DICTIONARY_PATH'))
+
+        # save the dictionary
+        dict_annotator.save_dictionary(os.getenv('DICTIONARY_PATH'))
 
         # initialize post processing annotator
         with open(os.getenv("POST_LABELING_RULES"), 'r') as f:
