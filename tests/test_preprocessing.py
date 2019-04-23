@@ -35,12 +35,12 @@ class TestPreprocessing:
                     file_text = f.read()
                     doc = DocFactory.create_doc_from_text(file_text, filename)
                     txt_docs.append(doc)
-            # elif filename.endswith('.xmi'):
-            #     with open(input_dir_path + filename, 'r') as f:
-            #         xmi_filenames.append(filename)
-            #         file_content = f.read()
-            #         doc = DocFactory.create_doc_from_xmi(file_content, typesystem_file_content, filename)
-            #         xmi_docs.append(doc)
+            elif filename.endswith('.xmi'):
+                with open(input_dir_path + filename, 'r') as f:
+                    xmi_filenames.append(filename)
+                    file_content = f.read()
+                    doc = DocFactory.create_doc_from_xmi(file_content, typesystem_file_content, filename)
+                    xmi_docs.append(doc)
 
         spacy_tagger = SpacyTagger(os.getenv("SPACY_MODEL_PATH"))
 

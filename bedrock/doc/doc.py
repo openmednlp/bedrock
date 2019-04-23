@@ -213,7 +213,8 @@ class Doc:
             return 0
 
         max_annotations_index = max(self.__annotations.index)
-        max_relations_index = max(self.__relations.index)
+
+        max_relations_index = -1 if self.__relations.empty else max(self.__relations.index)
 
         if max_annotations_index > max_relations_index:
             return max_annotations_index + 1
