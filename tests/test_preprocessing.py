@@ -28,19 +28,19 @@ class TestPreprocessing:
         xmi_filenames = []
         txt_docs = []
         xmi_docs = []
-        for filename in os.listdir(input_dir_path):
-            if filename.endswith('.txt'):
-                with open(input_dir_path + filename, 'r') as f:
-                    txt_filenames.append(filename)
-                    file_text = f.read()
-                    doc = DocFactory.create_doc_from_text(file_text, filename)
-                    txt_docs.append(doc)
-            elif filename.endswith('.xmi'):
-                with open(input_dir_path + filename, 'r') as f:
-                    xmi_filenames.append(filename)
-                    file_content = f.read()
-                    doc = DocFactory.create_doc_from_xmi(file_content, typesystem_file_content, filename)
-                    xmi_docs.append(doc)
+        # for filename in os.listdir(input_dir_path):
+            # if filename.endswith('.txt'):
+            #     with open(input_dir_path + filename, 'r') as f:
+            #         txt_filenames.append(filename)
+            #         file_text = f.read()
+            #         doc = DocFactory.create_doc_from_text(file_text, filename)
+            #         txt_docs.append(doc)
+            # elif filename.endswith('.xmi'):
+        with open(input_dir_path + 'TNM_1.xmi', 'r') as f:
+            xmi_filenames.append('TNM_1.xmi')
+            file_content = f.read()
+            doc = DocFactory.create_doc_from_xmi(file_content, typesystem_file_content, 'TNM_1.xmi')
+            xmi_docs.append(doc)
 
         spacy_tagger = SpacyTagger(os.getenv("SPACY_MODEL_PATH"))
 

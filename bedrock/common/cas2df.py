@@ -31,7 +31,9 @@ class CAS2DataFrameConverter:
                         if type(fval) is list:
                             if len(fval) > 1:
                                 # TODO handle multiple values per UIMA feature
-                                raise ValueError('UIMA features with multiple values not handled')
+                                print('ERROR:')
+                                print(fval)
+                                continue
                             fval = fval[0]
                             if layer == Layer.POS:  # TODO instead of if .. elif => iterate through layers
                                 if fname == uima.PosFeatureNames.POS_VALUE:
@@ -92,7 +94,7 @@ class CAS2DataFrameConverter:
         tokens = pd.merge(tokens, dependency_annotations, on=[Relation.BEGIN, Relation.END], how='left')
         tokens = tokens.replace({pd.np.nan: None})
 
-        annotations.loc[:, Annotation.ID] = annotations.index.values
+        annotations.loc[:, Annotation.ID] = annotations.index.values  # TODO fix it, sets ID to 0 again since index is 0
         annotations.set_index(Annotation.ID, inplace=True)
 
         relations.loc[:, Relation.ID] = relations.index.values
