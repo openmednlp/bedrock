@@ -94,10 +94,8 @@ class CAS2DataFrameConverter:
         tokens = pd.merge(tokens, dependency_annotations, on=[Relation.BEGIN, Relation.END], how='left')
         tokens = tokens.replace({pd.np.nan: None})
 
-        annotations.loc[:, Annotation.ID] = annotations.index.values  # TODO fix it, sets ID to 0 again since index is 0
+        # sets ID column as index
         annotations.set_index(Annotation.ID, inplace=True)
-
-        relations.loc[:, Relation.ID] = relations.index.values
         relations.set_index(Relation.ID, inplace=True)
 
         return tokens, annotations, relations
