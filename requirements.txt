@@ -13,3 +13,4 @@ fuzzywuzzy
 fuzzysearch
 python-Levenshtein
 pandasql
+DKPro-PyCAS==0.1.1a0
