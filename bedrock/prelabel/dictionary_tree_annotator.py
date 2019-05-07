@@ -185,8 +185,6 @@ class DictionaryTreeAnnotator(Annotator):
                     # node with the feature
                     if not_added == 0:
                         current_tree.add_feature(row[Annotation.FEATURE], row[Annotation.FEATURE_VAL])
-                        
-        self._tree.print()
 
     # adds split column with split and stemmed terms
     def __split_and_stem(self, data: pd.DataFrame):
