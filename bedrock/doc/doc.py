@@ -1,4 +1,5 @@
 import pandas as pd
+from pandasql import sqldf
 
 from doc.annotation import Annotation
 from doc.layer import Layer
@@ -19,6 +20,7 @@ class Doc:
         self.__tokens = pd.DataFrame(columns=Token.COLS)
         self.__annotations = pd.DataFrame(columns=Annotation.COLS)
         self.__relations = pd.DataFrame(columns=Relation.COLS)
+        self._meta_data = dict()
 
     def set_text(self, text: str):
         self.__text = text
@@ -128,6 +130,17 @@ class Doc:
                 # TODO add flavor feature ? "flavor":"basic"
         return cas
 
+    def set_meta_data(self, key: str, value: str):
+        self._meta_data[key] = value
+
+    def get_meta_data(self, key: str) -> str:
+        return self._meta_data[key]
+
+    def has_meta_key(self, key: str) -> bool:
+        if key in self._meta_data:
+            return True
+        return False
+
     def get_wideformat(self):
         '''
 
@@ -164,13 +177,14 @@ class Doc:
                 extended_annotations = extended_annotations.append(annotations)
 
             tmp_annotations_token_df = extended_annotations.groupby([Token.ID, Annotation.LAYER, Annotation.FEATURE]) \
-                .apply(lambda y: ','.join(list(map(lambda x: str(x), list(y[Annotation.FEATURE_VAL]))))) \
-                .reset_index(name=Annotation.FEATURE_VAL)
+                .apply(lambda y: ','.join(list(map(lambda x: str(x), list(y[Annotation.FEATURE_VAL])))))\
+                .reset_index().rename(columns={0: Annotation.FEATURE_VAL})
 
-            tmp_annotations_token_df.loc[:, pivot_name] = tmp_annotations_token_df[Annotation.LAYER] + "." + \
+            if tmp_annotations_token_df.empty is False:
+                print('empty')
+                tmp_annotations_token_df.loc[:, pivot_name] = tmp_annotations_token_df[Annotation.LAYER] + "." + \
                                                           tmp_annotations_token_df[Annotation.FEATURE].fillna('')
-
-            tmp_annotations_token_df = tmp_annotations_token_df.pivot(index=Token.ID, values=Annotation.FEATURE_VAL,
+                tmp_annotations_token_df = tmp_annotations_token_df.pivot(index=Token.ID, values=Annotation.FEATURE_VAL,
                                                                       columns=pivot_name)
 
             wide_format = self.get_tokens().merge(tmp_annotations_token_df, left_on=Token.ID, right_index=True,
@@ -179,7 +193,7 @@ class Doc:
 
             return wide_format
 
-        return None
+        return pd.DataFrame()
 
     def write_xmi(self, file_name, typesystem_filepath):
         cas = self.get_cas(typesystem_filepath)
