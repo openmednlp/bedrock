@@ -14,7 +14,7 @@ from bedrock.preprocessing import PreprocessingEngine
 load_dotenv()
 
 
-class TestPreprocessing(unittest.TestCase):
+class TestPreprocessing:
 
     def test_preprocessing_from_text(self):
         input_dir_path = os.getenv("DATA_INPUT_PATH")
@@ -51,39 +51,39 @@ class TestPreprocessing(unittest.TestCase):
         regex_annotator = RegexAnnotator(tnm_regex_patterns, Layer.TUMOR)
 
         # initialize dictionary labeler
-        dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
-        dictionary = dictionary[dictionary['languageCode'] == 'de']
-        dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
-        dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler', dictionary['term'].tolist(),
-                                                 dictionary['Group'].tolist(),
-                                                 dictionary['referencedComponentId'].tolist())
+        # dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
+        # dictionary = dictionary[dictionary['languageCode'] == 'de']
+        # dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
+        # dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler', dictionary['term'].tolist(),
+        #                                          dictionary['Group'].tolist(),
+        #                                          dictionary['referencedComponentId'].tolist())
 
         # load the dictionary from a pickle file
         # dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler',
         #                                         saved_tree_path=os.getenv('DICTIONARY_PATH'))
 
         # save the dictionary
-        dict_annotator.save_dictionary(os.getenv('DICTIONARY_PATH'))
+        # dict_annotator.save_dictionary(os.getenv('DICTIONARY_PATH'))
 
-        # initialize post processing annotator
-        with open(os.getenv("POST_LABELING_RULES"), 'r') as f:
-            post_labeling_rules = json.loads(f.read())
-        postlabeling_annotator = PostlabelingAnnotator(post_labeling_rules)
+        # # initialize post processing annotator
+        # with open(os.getenv("POST_LABELING_RULES"), 'r') as f:
+        #     post_labeling_rules = json.loads(f.read())
+        # postlabeling_annotator = PostlabelingAnnotator(post_labeling_rules)
 
 
         # build preprocessing engine and start it
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator, dict_annotator],
-                                                   [postlabeling_annotator])
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator], None)
+                                                   # [postlabeling_annotator])
         preprocessing_engine.preprocess(txt_docs)
 
         for idx, doc in enumerate(txt_docs):
             filename = txt_filenames[idx].split('.')
-            print(doc.get_wideformat())
+            # print(doc.get_wideformat())
             doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
 
         for idx, doc in enumerate(xmi_docs):
             filename = xmi_filenames[idx].split('.')
-            doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
+            #doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
 
         preprocessing_engine = PreprocessingEngine(annotators=[regex_annotator])
         preprocessing_engine.preprocess(xmi_docs)
@@ -94,4 +94,4 @@ class TestPreprocessing(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    TestPreprocessing().test_preprocessing_from_text()

@@ -9,5 +9,8 @@ UICC TNM 7. Auflage: pT1b, pNx, G3, V0, L0.
 UICC TNM 6. Auflage: pT1, pNx, G3, V0, L0.
 
 
+Aus systemtechnischen Gründen wurde die aktuelle Version, nämlich UICC TNM 8. Auflage nicht verwendet. Die AJCC 10 Auflage ist noch in Entwicklung.
+
+
 
 

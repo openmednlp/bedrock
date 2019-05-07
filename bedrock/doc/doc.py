@@ -1,5 +1,4 @@
 import pandas as pd
-from pandasql import sqldf
 
 from doc.annotation import Annotation
 from doc.layer import Layer
@@ -9,6 +8,7 @@ from pycas.type.cas import TypeSystemFactory
 from pycas.cas.core import CAS
 from pycas.cas.writer import XmiWriter
 from bedrock.common import uima, utils
+
 
 class Doc:
 
@@ -40,8 +40,9 @@ class Doc:
     def get_annotations(self) -> pd.DataFrame:
         return self.__annotations
 
-    def append_annotions(self, annotations: pd.DataFrame):
-        self.__annotations = self.__annotations.append(annotations)
+    def append_annotions(self, annotations: pd.DataFrame, ignore_index: bool):
+        if annotations is not None:
+            self.__annotations = self.__annotations.append(annotations, ignore_index=ignore_index)
 
     def set_tokens(self, tokens: pd.DataFrame):
         self.__tokens = tokens
@@ -55,8 +56,9 @@ class Doc:
     def get_relations(self) -> pd.DataFrame:
         return self.__relations
 
-    def append_relations(self, relations: pd.DataFrame):
-        self.__relations = self.__relations.append(relations)
+    def append_relations(self, relations: pd.DataFrame, ignore_index: bool):
+        if relations is not None:
+            self.__relations = self.__relations.append(relations, ignore_index=ignore_index)
 
     def save_as_pickle(self, file_path):
         utils.save_pickle(self, file_path)
@@ -68,32 +70,38 @@ class Doc:
         cas.documentText = self.get_text()
         cas.sofaMimeType = 'text'
 
+
+        # self.__annotations[Annotation.BEGIN] = self.__annotations[Annotation.BEGIN].astype(int)
+
         # iterate over annotations
-        for _, annotation in self.__annotations.iterrows():
+        for index, annotation in self.__annotations.iterrows():
 
             layer = annotation[Annotation.LAYER]
             fs_anno = None
 
             if layer == Layer.TOKEN:
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.TOKEN, {
-                    uima.ID: int(annotation[Annotation.ID]),
+                    uima.ID: index,
                     uima.BEGIN: int(annotation[Annotation.BEGIN]),
                     uima.END: int(annotation[Annotation.END])
                 })
             elif layer == Layer.POS:
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.POS, {
+                    uima.ID: index,
                     uima.BEGIN: int(annotation[Annotation.BEGIN]),
                     uima.END: int(annotation[Annotation.END]),
                     uima.PosFeatureNames.POS_VALUE: annotation[Annotation.FEATURE_VAL]
                 })
-            elif layer == Layer.TUMOR:  # TODO unclear
+            elif layer == Layer.TUMOR:
                 fs_anno = cas.createAnnotation(uima.CustomTypeNames.TUMOR, {
+                    uima.ID: index,
                     uima.BEGIN: int(annotation[Annotation.BEGIN]),
                     uima.END: int(annotation[Annotation.END]),
                     annotation[Annotation.FEATURE]: annotation[Annotation.FEATURE_VAL]
                 })
             elif layer == Layer.SENTENCE:
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.SENTENCE, {
+                    uima.ID: index,
                     uima.BEGIN: int(annotation[Annotation.BEGIN]),
                     uima.END: int(annotation[Annotation.END])
                 })
@@ -103,31 +111,40 @@ class Doc:
             if fs_anno is not None:
                 cas.addToIndex(fs_anno)
 
-        for _, relation in self.__relations.iterrows():
+        for index, relation in self.__relations.iterrows():
 
             if relation[Relation.LAYER] == Layer.DEPENDENCY:
                 fs_anno = cas.createAnnotation(uima.StandardTypeNames.DEPENDENCY, {
+                    uima.ID: index,
                     uima.BEGIN: int(relation[Relation.BEGIN]),
                     uima.END: int(relation[Relation.END]),
                     uima.DependencyFeatureNames.DEPENDENCY_TYPE: relation[Relation.FEATURE_VAL]
                 })
-                cas.addToIndex(fs_anno)
+            elif relation[Relation.LAYER] == Layer.TUMOR_RELATION:
+                fs_anno = cas.createAnnotation(uima.CustomTypeNames.TUMOR_REL, {
+                    uima.ID: index,
+                    uima.BEGIN: int(relation[Relation.BEGIN]),
+                    uima.END: int(relation[Relation.END])
+                })
+            else:
+                raise ValueError('unknown relation layer')
 
-                fs_governor = None
-                fs_dependent = None
-                for fs in cas.getAnnotationIndex():
-                    if fs.FSid == int(relation[Relation.GOV_ID]):
-                        fs_governor = fs
-                    if fs.FSid == int(relation[Relation.DEP_ID]):
-                        fs_dependent = fs
-                if fs_dependent is None:
-                    raise ValueError("cannot set dependent. dependet feature is None")
-                setattr(fs_anno, uima.DependencyFeatureNames.DEPENDENT, fs_dependent)
-                if fs_governor is None:
-                    raise ValueError("cannot set governor. governor feature is None")
-                setattr(fs_anno, uima.DependencyFeatureNames.GOVERNOR, fs_governor)
+            cas.addToIndex(fs_anno)
 
-                # TODO add flavor feature ? "flavor":"basic"
+            fs_governor = None
+            fs_dependent = None
+            for fs in cas.getAnnotationIndex():
+                if fs.FSid == int(relation[Relation.GOV_ID]):
+                    fs_governor = fs
+                if fs.FSid == int(relation[Relation.DEP_ID]):
+                    fs_dependent = fs
+            if fs_dependent is None:
+                raise ValueError("cannot set dependent. dependet feature is None")
+            setattr(fs_anno, uima.DependencyFeatureNames.DEPENDENT, fs_dependent)
+            if fs_governor is None:
+                raise ValueError("cannot set governor. governor feature is None")
+            setattr(fs_anno, uima.DependencyFeatureNames.GOVERNOR, fs_governor)
+
         return cas
 
     def set_meta_data(self, key: str, value: str):
@@ -202,3 +219,16 @@ class Doc:
 
     def load_pickle(file_path):
         return utils.load_pickle(file_path)
+
+    def get_next_start_index(self) -> int:
+        if self.__annotations.empty:
+            return 0
+
+        max_annotations_index = max(self.__annotations.index)
+
+        max_relations_index = -1 if self.__relations.empty else max(self.__relations.index)
+
+        if max_annotations_index > max_relations_index:
+            return max_annotations_index + 1
+
+        return max_relations_index + 1
