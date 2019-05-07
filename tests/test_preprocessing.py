@@ -42,7 +42,7 @@ class TestPreprocessing:
                     doc = DocFactory.create_doc_from_xmi(file_content, typesystem_file_content, filename)
                     xmi_docs.append(doc)
 
-        spacy_tagger = SpacyTagger(os.getenv("SPACY_MODEL_PATH"))
+        spacy_tagger = SpacyTagger("de_core_news_sm")
 
         # initialize regex labeler
         with open(os.getenv("TNM_PATTERNS"), 'r') as f:
@@ -83,7 +83,7 @@ class TestPreprocessing:
 
         for idx, doc in enumerate(xmi_docs):
             filename = xmi_filenames[idx].split('.')
-            #doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
+            # doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
 
         preprocessing_engine = PreprocessingEngine(annotators=[regex_annotator])
         preprocessing_engine.preprocess(xmi_docs)
