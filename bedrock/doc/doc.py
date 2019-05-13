@@ -158,9 +158,13 @@ class Doc:
             return True
         return False
 
+    def get_meta_data_frame(self):
+        keys = list(self._meta_data.keys())
+        values = list(self._meta_data.values())
+        return pd.DataFrame({'key': keys, 'value': values})
+
     def get_wideformat(self):
         '''
-
               :ivar: tokens and annotations class members
 
               :Restrictions:
