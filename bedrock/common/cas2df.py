@@ -5,6 +5,7 @@ from doc.annotation import Annotation
 from doc.token import Token
 from doc.layer import Layer
 from bedrock.common import uima
+import logging
 
 class CAS2DataFrameConverter:
 
@@ -31,8 +32,7 @@ class CAS2DataFrameConverter:
                         if type(fval) is list:
                             if len(fval) > 1:
                                 # TODO handle multiple values per UIMA feature
-                                print('ERROR:')
-                                print(fval)
+                                logging.warning(fval)
                                 continue
                             fval = fval[0]
                             if layer == Layer.POS:  # TODO instead of if .. elif => iterate through layers
