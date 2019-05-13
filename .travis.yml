@@ -29,7 +29,3 @@ install:
   - sh bin/bedrock download de
 
 after_success: coverage report
-
-script:
-- python -m unittest tests/test_nltk_processor.py
-- python -m unittest tests/test_spacy_processor.py

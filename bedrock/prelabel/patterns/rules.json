@@ -1,0 +1,13 @@
+[
+  {
+    "window": 5,
+    "identifier": [{ "column": "feature", "value": "TNM" }, { "column":  "feature_value", "value": "TNM"}],
+    "requires": [{ "column": "feature", "value": "TNM" }, { "column":  "feature_value", "value": "version"}]
+  },
+  {
+    "window": 0,
+    "ignore_sentence_boundaries": false,
+    "identifier": [{ "column": "feature", "value": "TNM" }, { "column":  "feature_value", "value": "TNM"}],
+    "requires": [{ "column": "feature", "value": "TNM" }, { "column":  "feature_value", "value": "TNM_version"}]
+  }
+]

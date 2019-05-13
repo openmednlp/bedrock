@@ -101,3 +101,10 @@ ENV/
 .mypy_cache/
 
 *.csv
+
+# project based
+.idea
+tests/data/output/*
+
+# macOS
+.DS_Store

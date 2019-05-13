@@ -1,0 +1,22 @@
+{
+"Certainty": {
+    "absent": {
+      "description": "none",
+      "regex": "(tumorfrei|kei[n|ne|nen|ner]|nicht vorhanden|absent|kein Nachweis)",
+      "tag_name": "absent",
+      "xmi_property": "cCertainty"
+    },
+   "maybeabsent": {
+      "description": "International System of Units unit of length SCTID: 258668000",
+      "regex": "(möglicherweise|eventuell|unsicher|nicht auszuschliessen)",
+      "tag_name": "maybe absent",
+      "xmi_property": "cCertainty"
+    },
+  "maybepresent": {
+      "description": "International System of Units unit of length SCTID: 258668000",
+      "regex": "(eventuell|nicht auszuschliessen)",
+      "tag_name": "maybe absent",
+      "xmi_property": "cCertainty"
+    }
+  }
+}

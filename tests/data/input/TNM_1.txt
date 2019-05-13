@@ -1,0 +1,16 @@
+﻿AJCC 2009: pT4a, pN3 (1/1 und In-Transit-Metastasen), L1, V0, Pn0.
+pT1, pN3 (linksseitige Lymphknoten: 3/30, rechtsseitige Lymphknoten: 5/39), L1, Pn1, V0, G3
+Tumor pT1,cN0,cMx
+Mässig differenziertes, teilweise verhornendes Plattenepithelkarzinom, Tumor-Maximaldurchmesser: 1.9cm, Infiltration in die Subkutis, nächster Resektionsrand zur Tiefe, ca. 100um. pT1, G2
+Gut differenziertes verhornendes Plattenepithelkarzinom Typ Keratoakanthom, Tumor-Maximaldurchmesser: 8mm, allseits im Gesunden reseziert, nächster Resektionsrand zur Tiefe: 2.5mm. pT1, G1, R0.
+
+Tumorklassifikation (unter Berücksichtigung von B2015.16783-16788):
+UICC TNM 7. Auflage: pT1b, pNx, G3, V0, L0.
+UICC TNM 6. Auflage: pT1, pNx, G3, V0, L0.
+
+
+Aus systemtechnischen Gründen wurde die aktuelle Version, nämlich UICC TNM 8. Auflage nicht verwendet. Die AJCC 10 Auflage ist noch in Entwicklung.
+
+
+
+
