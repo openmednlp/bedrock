@@ -105,3 +105,6 @@ ENV/
 # project based
 .idea
 tests/data/output/*
+
+# macOS
+.DS_Store

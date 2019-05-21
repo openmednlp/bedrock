@@ -5,6 +5,7 @@ from doc.annotation import Annotation
 from doc.token import Token
 from doc.layer import Layer
 from bedrock.common import uima
+import logging
 
 class CAS2DataFrameConverter:
 
@@ -31,23 +32,24 @@ class CAS2DataFrameConverter:
                         if type(fval) is list:
                             if len(fval) > 1:
                                 # TODO handle multiple values per UIMA feature
-                                raise ValueError('UIMA features with multiple values not handled')
+                                logging.warning(fval)
+                                continue
                             fval = fval[0]
-                        if layer == Layer.POS:  # TODO instead of if .. elif => iterate through layers
-                            if fname == uima.PosFeatureNames.POS_VALUE:
-                                row[Annotation.FEATURE] = Token.POS_VALUE
+                            if layer == Layer.POS:  # TODO instead of if .. elif => iterate through layers
+                                if fname == uima.PosFeatureNames.POS_VALUE:
+                                    row[Annotation.FEATURE] = Token.POS_VALUE
+                                    row[Annotation.FEATURE_VAL] = fval
+                            elif layer in [Layer.DEPENDENCY, Layer.TUMOR_RELATION]:
+                                if fname == uima.DependencyFeatureNames.DEPENDENT:
+                                    row[Relation.DEP_ID] = int(fval.FSid)
+                                elif fname == uima.DependencyFeatureNames.GOVERNOR:
+                                    row[Relation.GOV_ID] = int(fval.FSid)
+                                elif fname == uima.DependencyFeatureNames.DEPENDENCY_TYPE:
+                                    row[Relation.FEATURE] = Token.DEP_TYPE
+                                    row[Relation.FEATURE_VAL] = fval
+                            elif layer == Layer.TUMOR:
+                                row[Annotation.FEATURE] = fname
                                 row[Annotation.FEATURE_VAL] = fval
-                        elif layer == Layer.DEPENDENCY:
-                            if fname == uima.DependencyFeatureNames.DEPENDENT:
-                                row[Relation.DEP_ID] = int(fval.FSid)
-                            elif fname == uima.DependencyFeatureNames.GOVERNOR:
-                                row[Relation.GOV_ID] = int(fval.FSid)
-                            elif fname == uima.DependencyFeatureNames.DEPENDENCY_TYPE:
-                                row[Relation.FEATURE] = Token.DEP_TYPE
-                                row[Relation.FEATURE_VAL] = fval
-                        elif layer == Layer.TUMOR:
-                            row[Annotation.FEATURE] = fname
-                            row[Annotation.FEATURE_VAL] = fval
 
                 row[Annotation.ID] = int(element.FSid)
                 row[Annotation.LAYER] = layer
@@ -61,12 +63,10 @@ class CAS2DataFrameConverter:
                     annotations = annotations.append(row, ignore_index=True)
                 elif layer == Layer.POS:
                     annotations = annotations.append(row, ignore_index=True)
-                elif layer == Layer.DEPENDENCY:
-                    relations = relations.append(row, ignore_index=True)
                 elif layer == Layer.TUMOR:
                     annotations = annotations.append(row, ignore_index=True)
-                elif layer in [Layer.TUMOR_RELATION]:
-                    raise ValueError('Layer '+layer+' not yet implemented')
+                elif layer in [Layer.DEPENDENCY, Layer.TUMOR_RELATION]:
+                    relations = relations.append(row, ignore_index=True)
 
         tokens = annotations[
             (annotations[Annotation.LAYER] == Layer.TOKEN) & (annotations[Annotation.FEATURE] == Token.TEXT)
@@ -93,5 +93,9 @@ class CAS2DataFrameConverter:
         dependency_annotations.rename(columns={Annotation.FEATURE_VAL: Token.DEP_TYPE}, inplace=True)
         tokens = pd.merge(tokens, dependency_annotations, on=[Relation.BEGIN, Relation.END], how='left')
         tokens = tokens.replace({pd.np.nan: None})
+
+        # sets ID column as index
+        annotations.set_index(Annotation.ID, inplace=True)
+        relations.set_index(Relation.ID, inplace=True)
 
         return tokens, annotations, relations
