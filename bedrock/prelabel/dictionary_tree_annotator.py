@@ -97,7 +97,7 @@ class DictionaryTreeAnnotator(Annotator):
     ADDED = 'added'
     PATH = 'path'
 
-    def __init__(self, origin: str, terms: List[str] = None, features: List[str] = None,
+    def __init__(self, origin: str, layer: str, terms: List[str] = None, features: List[str] = None,
                  feature_values: List[str] = None, saved_tree_path: str = None, print_progress: bool = False):
 
         if saved_tree_path is None and (len(terms) != len(feature_values) or len(feature_values) != len(features)):
@@ -105,6 +105,7 @@ class DictionaryTreeAnnotator(Annotator):
 
         self._print_progress = print_progress
         self._origin = origin
+        self._layer = layer
         self._stemmer = Cistem()
 
         if saved_tree_path is None:
@@ -270,7 +271,7 @@ class DictionaryTreeAnnotator(Annotator):
                                 Annotation.ID: token[Token.ID],
                                 Annotation.BEGIN: token[Token.BEGIN],
                                 Annotation.END: token[Token.END],
-                                Annotation.LAYER: Layer.TUMOR,
+                                Annotation.LAYER: self._layer,
                                 Annotation.FEATURE: current_feature[Annotation.FEATURE],
                                 Annotation.FEATURE_VAL: current_feature[Annotation.FEATURE_VAL]
                             }, ignore_index=True)

@@ -6,16 +6,42 @@ from doc.token import Token
 from doc.layer import Layer
 from bedrock.common import uima
 import logging
+from typing import Any
+import warnings
+
 
 class CAS2DataFrameConverter:
 
+    def __init__(self, mapping_fns: dict = None, appending_fns: dict = None):
+        if mapping_fns is None:
+            self.__mapping_fns = {}
+        else:
+            self.__mapping_fns = mapping_fns
+
+        if appending_fns is None:
+            self.__appending_fns = {}
+        else:
+            self.__appending_fns = appending_fns
+
+    def register_mapping_fn(self, layer_name: str, fn: Any):
+        self.__mapping_fns[layer_name] = fn
+
+    def register_appending_fn(self, layer_name: str, fn: Any):
+        self.__appending_fns[layer_name] = fn
+
+    def unregister_mapping_fn(self, layer_name: str):
+        self.__mapping_fns[layer_name] = None
+
+    def unregister_appending_fn(self, layer_name: str):
+        self.__appending_fns[layer_name] = None
+
     # Generates panda df from the UIMA CAS: tokens, annotations, relations, uima (combined)
-    def get_dataframes(cas):
+    def get_dataframes(self, cas):
         annotations = pd.DataFrame(columns=Annotation.COLS)
         relations = pd.DataFrame(columns=Relation.COLS)
 
         for element in cas.getAnnotationIndex():
-            layer = element.FStype.name.split('.')[-1]
+            layer = element.FStype.name
 
             if element.FStype.name == 'uima.cas.Sofa':
                 cas_text = '"' + html.unescape(element.sofaString) + '"'
@@ -23,50 +49,33 @@ class CAS2DataFrameConverter:
 
             if len(element.getFeatures()) >= 1:
                 row = {}
-                for fdict in element.getFeatureValsAsDictList():
-                    for fname, fval in fdict.items():
-                        if fname == uima.BEGIN:
-                            row[Annotation.BEGIN] = int(fval)
-                        elif fname == uima.END:
-                            row[Annotation.END] = int(fval)
-                        if type(fval) is list:
-                            if len(fval) > 1:
+                for feature_dict in element.getFeatureValsAsDictList():
+                    for feature_name, feature_value in feature_dict.items():
+                        if feature_name == uima.BEGIN:
+                            row[Annotation.BEGIN] = int(feature_value)
+                        elif feature_name == uima.END:
+                            row[Annotation.END] = int(feature_value)
+
+                        if type(feature_value) is list:
+                            if len(feature_value) > 1:
                                 # TODO handle multiple values per UIMA feature
-                                logging.warning(fval)
+                                logging.warning(feature_value)
                                 continue
-                            fval = fval[0]
-                            if layer == Layer.POS:  # TODO instead of if .. elif => iterate through layers
-                                if fname == uima.PosFeatureNames.POS_VALUE:
-                                    row[Annotation.FEATURE] = Token.POS_VALUE
-                                    row[Annotation.FEATURE_VAL] = fval
-                            elif layer in [Layer.DEPENDENCY, Layer.TUMOR_RELATION]:
-                                if fname == uima.DependencyFeatureNames.DEPENDENT:
-                                    row[Relation.DEP_ID] = int(fval.FSid)
-                                elif fname == uima.DependencyFeatureNames.GOVERNOR:
-                                    row[Relation.GOV_ID] = int(fval.FSid)
-                                elif fname == uima.DependencyFeatureNames.DEPENDENCY_TYPE:
-                                    row[Relation.FEATURE] = Token.DEP_TYPE
-                                    row[Relation.FEATURE_VAL] = fval
-                            elif layer == Layer.TUMOR:
-                                row[Annotation.FEATURE] = fname
-                                row[Annotation.FEATURE_VAL] = fval
+                            feature_value = feature_value[0]
+
+                            if layer in self.__mapping_fns:
+                                row = self.__mapping_fns[layer](row, feature_name, feature_value)
 
                 row[Annotation.ID] = int(element.FSid)
                 row[Annotation.LAYER] = layer
-                if layer in Layer.TOKEN:  # TODO instead of if .. elif => iterate through layers
-                    row[Annotation.FEATURE] = Token.TEXT
+                if layer in Layer.TOKEN:
                     row[Annotation.FEATURE_VAL] = cas_text[row[Annotation.BEGIN]+1:row[Annotation.END]+1]
-                    annotations = annotations.append(row, ignore_index=True)
-                elif layer == Layer.SENTENCE:
-                    row[Annotation.FEATURE] = None
-                    row[Annotation.FEATURE_VAL] = None
-                    annotations = annotations.append(row, ignore_index=True)
-                elif layer == Layer.POS:
-                    annotations = annotations.append(row, ignore_index=True)
-                elif layer == Layer.TUMOR:
-                    annotations = annotations.append(row, ignore_index=True)
-                elif layer in [Layer.DEPENDENCY, Layer.TUMOR_RELATION]:
-                    relations = relations.append(row, ignore_index=True)
+
+                # add the layer to the data frame
+                if layer in self.__appending_fns:
+                    annotations, relations = self.__appending_fns[layer](row, annotations, relations)
+                else:
+                    warnings.warn("appending function not implemented for layer: " + layer)
 
         tokens = annotations[
             (annotations[Annotation.LAYER] == Layer.TOKEN) & (annotations[Annotation.FEATURE] == Token.TEXT)
