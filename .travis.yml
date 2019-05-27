@@ -26,7 +26,6 @@ install:
   - python setup.py install
   - pip install .
   - pip install coverage
-  - pip install unittest
   - sh bin/bedrock download de
 
 after_success: coverage report
