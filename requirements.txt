@@ -13,4 +13,4 @@ fuzzywuzzy
 fuzzysearch
 python-Levenshtein
 pandasql
-DKPro-PyCAS==0.1.1a0
+git+https://github.com/dkpro/dkpro-pycas.git@d23aabbab853d1c04f3544ccc764ec2c19973441
