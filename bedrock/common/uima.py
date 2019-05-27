@@ -16,13 +16,6 @@ class StandardTypeNames:
     DEPENDENCY = 'de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency'
 
 
-class CustomTypeNames:
-
-    TUMOR = 'webanno.custom.Tumor'
-
-    TUMOR_REL = 'webanno.custom.TumorRelation'
-
-
 class DependencyFeatureNames:
 
     GOVERNOR = 'Governor'

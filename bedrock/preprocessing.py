@@ -29,7 +29,7 @@ class PreprocessingEngine:
                     if not annotations.empty:
                         annotations.index += next_index
                         max_annotations_index = annotations.index[-1]
-                        doc.append_annotions(annotations, False)
+                        doc.append_annotations(annotations, False)
                         if not relations.empty:  # relations cannot exist without annotations
                             relations[[Relation.GOV_ID, Relation.DEP_ID]] += next_index
                             relations.index += max_annotations_index+1
