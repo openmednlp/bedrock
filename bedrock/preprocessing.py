@@ -1,13 +1,10 @@
-from bedrock.doc.doc import Doc, Token, Annotation, Relation
+from bedrock.doc.doc import Doc
 from bedrock.doc.relation import Relation
 from typing import List
 from bedrock.tagger.tagger import Tagger
 from bedrock.prelabel.annotator import Annotator
-import pandas as pd
 
 class PreprocessingEngine:
-
-    ID_OFFSET = 19
 
     def __init__(self, tagger: Tagger = None, annotators: List[Annotator] = None,
                  postlabeling_annotators: List[Annotator] = None):
@@ -22,15 +19,6 @@ class PreprocessingEngine:
                 doc.set_tokens(tokens)
                 doc.set_annotations(annotations)
                 doc.set_relations(relations)
-                # print("Tokens:")
-                # print(tokens)
-                # print("\n")
-                # print("Annotations:")
-                # print(annotations)
-                # print("\n")
-                # print("Relations:")
-                # print(relations)
-                # print("\n")
 
     def __set_annotations(self, docs: List[Doc]):
         if self.annotators is not None:

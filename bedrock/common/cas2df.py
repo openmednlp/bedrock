@@ -7,6 +7,7 @@ from doc.layer import Layer
 from bedrock.common import uima
 import logging
 
+
 class CAS2DataFrameConverter:
 
     # Generates panda df from the UIMA CAS: tokens, annotations, relations, uima (combined)
