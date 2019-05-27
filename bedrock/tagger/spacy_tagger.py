@@ -12,8 +12,8 @@ class SpacyTagger(Tagger):
 
     ID_OFFSET = 19
 
-    def __init__(self, spacy_model_path):
-        self.nlp = spacy.load(spacy_model_path)
+    def __init__(self, language='de'):
+        self.nlp = spacy.load(language)
         self.nlp.add_pipe(self.set_custom_boundaries, before='parser')
 
     def get_tags(self, doc: Doc):

@@ -32,19 +32,21 @@ class DocFactory:
     def unregister_2_cas_fn(self, layer_name: str):
         self.__cas_converter_fns[layer_name] = None
 
-    def create_doc_from_text(self, text: str, filename: str) -> Doc:
+    def create_doc_from_text(self, text: str, filename: str=None) -> Doc:
         doc = Doc()
         for layer_name in self.__cas_converter_fns:
             doc.register_converter_function(layer_name, self.__cas_converter_fns[layer_name])
-        doc.set_filename(filename)
+        if filename is not None:
+            doc.set_filename(filename)
         doc.set_text(DocFactory.__preprocess(text))
         return doc
 
-    def create_doc_from_xmi(self, xmi_content: str, type_content: str, xmi_filename: str) -> Doc:
+    def create_doc_from_xmi(self, xmi_content: str, type_content: str, xmi_filename: str=None) -> Doc:
         doc = Doc()
         for layer_name in self.__cas_converter_fns:
             doc.register_converter_function(layer_name, self.__cas_converter_fns[layer_name])
-        doc.set_filename(xmi_filename)
+        if xmi_filename is not None:
+            doc.set_filename(xmi_filename)
         cas = CasFactory().buildCASfromStrings(xmi_content, type_content)
         tokens, annotations, relations = self.__cas_converter.get_dataframes(cas)
         doc.set_text(cas.documentText)

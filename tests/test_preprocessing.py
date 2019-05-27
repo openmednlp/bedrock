@@ -1,11 +1,11 @@
 import unittest
 import os
-from bedrock.doc.docfactory import DocFactory
+from bedrock.doc.doc_factory import DocFactory
 from bedrock.prelabel.regex_annotator import RegexAnnotator
-from bedrock.tagger.spacytagger import SpacyTagger
+from bedrock.tagger.spacy_tagger import SpacyTagger
 from dotenv import load_dotenv
 from pandas import DataFrame
-from bedrock.preprocessing import PreprocessingEngine
+from bedrock.engine import PreprocessingEngine
 from typing import Any
 from doc.relation import Relation
 from doc.annotation import Annotation

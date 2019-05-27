@@ -4,13 +4,14 @@ from typing import List
 from bedrock.tagger.tagger import Tagger
 from bedrock.prelabel.annotator import Annotator
 
-class PreprocessingEngine:
+
+class ProcessingEngine:
 
     def __init__(self, tagger: Tagger = None, annotators: List[Annotator] = None,
-                 postlabeling_annotators: List[Annotator] = None):
+                 post_labeling_annotators: List[Annotator] = None):
         self.tagger = tagger
         self.annotators = annotators
-        self.postlabeling_annotators = postlabeling_annotators
+        self._post_labeling_annotators = post_labeling_annotators
 
     def __set_tags(self, docs: List[Doc]):
         if self.tagger is not None:
@@ -35,17 +36,17 @@ class PreprocessingEngine:
                             relations.index += max_annotations_index+1
                             doc.append_relations(relations, False)
 
-    def __run_postlabeling(self, docs: List[Doc]):
-        if self.postlabeling_annotators is not None:
+    def __run_post_labeling(self, docs: List[Doc]):
+        if self._post_labeling_annotators is not None:
             for doc in docs:
-                for post_annotator in self.postlabeling_annotators:
+                for post_annotator in self._post_labeling_annotators:
                     annotations, relations = post_annotator.get_annotations(doc)
                     doc.set_annotations(annotations)
                     if relations is not None:
                         doc.set_relations(relations)
 
-    def preprocess(self, docs: List[Doc]) -> List[Doc]:
+    def process(self, docs: List[Doc]) -> List[Doc]:
         self.__set_tags(docs)
         self.__set_annotations(docs)
-        self.__run_postlabeling(docs)
+        self.__run_post_labeling(docs)
         return docs

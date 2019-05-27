@@ -1,6 +1,6 @@
 import unittest
 import os
-from bedrock.doc.docfactory import DocFactory
+from bedrock.doc.doc_factory import DocFactory
 from dotenv import load_dotenv
 from typing import Any
 from doc.relation import Relation
