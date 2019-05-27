@@ -15,15 +15,13 @@ from common.cas_converter_fns import CASConverterFns
 
 class Doc:
 
-    def __init__(self, converter_2_df_functions=None):
-        # TODO add uid, report_type, date, patient_number
-        # TODO improvment by passing filename and text to constructor
-        self.__text = ""
-        self.__filename = ""
+    def __init__(self, text: str = "", filename: str = "", converter_2_df_functions=None):
+        self.__text = text
+        self.__filename = filename
         self.__tokens = pd.DataFrame(columns=Token.COLS)
         self.__annotations = pd.DataFrame(columns=Annotation.COLS)
         self.__relations = pd.DataFrame(columns=Relation.COLS)
-        self._meta_data = dict()
+        self._meta_data = {}
 
         if converter_2_df_functions is None:
             self.__converter_fns = CASConverterFns.get_2_cas_functions()
@@ -83,9 +81,6 @@ class Doc:
         cas = CAS.CAS(type_system)
         cas.documentText = self.get_text()
         cas.sofaMimeType = 'text'
-
-
-        # self.__annotations[Annotation.BEGIN] = self.__annotations[Annotation.BEGIN].astype(int)
 
         # iterate over annotations
         for index, annotation in self.__annotations.iterrows():
@@ -185,7 +180,6 @@ class Doc:
                 .reset_index().rename(columns={0: Annotation.FEATURE_VAL})
 
             if tmp_annotations_token_df.empty is False:
-                print('empty')
                 tmp_annotations_token_df.loc[:, pivot_name] = tmp_annotations_token_df[Annotation.LAYER] + "." + \
                                                           tmp_annotations_token_df[Annotation.FEATURE].fillna('')
                 tmp_annotations_token_df = tmp_annotations_token_df.pivot(index=Token.ID, values=Annotation.FEATURE_VAL,
