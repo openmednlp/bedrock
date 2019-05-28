@@ -9,7 +9,7 @@ from functools import reduce
 import pandas as pd
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
-from nltk.stem.cistem import Cistem
+from nltk.stem.snowball import SnowballStemmer
 import _pickle as pickle
 
 
@@ -110,7 +110,7 @@ class DictionaryTreeAnnotator(Annotator):
         self._print_progress = print_progress
         self._origin = origin
         self._layer = layer
-        self._stemmer = Cistem()
+        self._stemmer = SnowballStemmer("german")
 
         if saved_tree_path is None:
             self._data = pd.DataFrame(
