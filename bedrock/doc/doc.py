@@ -1,16 +1,15 @@
 import pandas as pd
 
-from doc.annotation import Annotation
-from doc.layer import Layer
-from doc.relation import Relation
-from doc.token import Token
+from bedrock.doc.annotation import Annotation
+from bedrock.doc.relation import Relation
+from bedrock.doc.token import Token
 from pycas.type.cas import TypeSystemFactory
 from pycas.cas.core import CAS
 from pycas.cas.writer import XmiWriter
 from bedrock.common import uima, utils
 import warnings
 from typing import Any
-from common.cas_converter_fns import CASConverterFns
+from bedrock.common.cas_converter_fns import CASConverterFns
 
 
 class Doc:

@@ -1,5 +1,9 @@
 from bedrock.prelabel.annotator import Annotator
-from bedrock.doc.doc import Doc, Token, Annotation, Relation, Layer
+from bedrock.doc.doc import Doc
+from bedrock.doc.token import Token
+from bedrock.doc.annotation import Annotation
+from bedrock.doc.relation import Relation
+from bedrock.doc.layer import Layer
 from typing import List
 from functools import reduce
 import pandas as pd

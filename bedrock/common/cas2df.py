@@ -1,9 +1,9 @@
 import pandas as pd
 import html
-from doc.relation import Relation
-from doc.annotation import Annotation
-from doc.token import Token
-from doc.layer import Layer
+from bedrock.doc.relation import Relation
+from bedrock.doc.annotation import Annotation
+from bedrock.doc.token import Token
+from bedrock.doc.layer import Layer
 from bedrock.common import uima
 import logging
 from typing import Any

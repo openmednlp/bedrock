@@ -12,10 +12,13 @@ class Pipeline:
         self._post_labeling_annotators = []
         self._doc_factory = DocFactory()
 
+    def get_docs(self):
+        return self._docs
+
     def parse_text(self, text: str):
         doc = self._doc_factory.create_doc_from_text(text, None)
         self._docs.append(doc)
-        return self._docs
+        return self
 
     def parse_cas(self, xmi_file_path: str, type_system_file_path: str):
         with open(type_system_file_path, 'r') as f:
@@ -25,7 +28,7 @@ class Pipeline:
 
         doc = self._doc_factory.create_doc_from_xmi(xmi_content, type_system)
         self._docs.append(doc)
-        return self._docs
+        return self
 
     def set_tags(self):
         if self._tagger is not None:
@@ -68,4 +71,3 @@ class Pipeline:
 
     def process(self):
         return self.set_tags().set_annotations().run_post_labeling()
-

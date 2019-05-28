@@ -1,9 +1,9 @@
 from bedrock.doc.doc import Doc
-from xml.sax import saxutils
 from pycas.cas.core.CasFactory import CasFactory
-from common.cas2df import CAS2DataFrameConverter
+from bedrock.common.cas2df import CAS2DataFrameConverter
 from typing import Any
-from common.cas_converter_fns import CASConverterFns
+from bedrock.common.cas_converter_fns import CASConverterFns
+import bedrock.common.utils as utils
 
 
 class DocFactory:
@@ -38,7 +38,7 @@ class DocFactory:
             doc.register_converter_function(layer_name, self.__cas_converter_fns[layer_name])
         if filename is not None:
             doc.set_filename(filename)
-        doc.set_text(DocFactory.__preprocess(text))
+        doc.set_text(utils.preprocess_text(text))
         return doc
 
     def create_doc_from_xmi(self, xmi_content: str, type_content: str, xmi_filename: str=None) -> Doc:
@@ -55,22 +55,6 @@ class DocFactory:
         doc.set_relations(relations)
         return doc
 
-    @staticmethod
-    def __preprocess(text_raw: str) -> str:
-        """ argument text_raw: string
-            returns text_proproc: processed string in utf_8 format, escaped
-            """
-        # preprocess such that webanno and spacy text the same, no changes in Webanno
-        # side effect: lose structure of report (newline)
-        text_preproc = text_raw
-
-        # utf-8 encoding
-        text_preproc = text_preproc.strip('"')
-        text_preproc = text_preproc.replace("\n", " ")
-        text_preproc = text_preproc.replace("<br>", "\n")
-        text_preproc = ' '.join(filter(len, text_preproc.split(' ')))
-        text_preproc = saxutils.unescape(text_preproc)
-        return text_preproc
 
 
 

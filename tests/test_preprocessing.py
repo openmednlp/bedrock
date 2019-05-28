@@ -5,7 +5,7 @@ from bedrock.prelabel.regex_annotator import RegexAnnotator
 from bedrock.tagger.spacy_tagger import SpacyTagger
 from dotenv import load_dotenv
 from pandas import DataFrame
-from bedrock.engine import PreprocessingEngine
+from bedrock.engine import ProcessingEngine
 from typing import Any
 from doc.relation import Relation
 from doc.annotation import Annotation
@@ -132,7 +132,7 @@ class TestPreprocessing:
 
 
         # build preprocessing engine and start it
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator], None)
+        preprocessing_engine = ProcessingEngine(spacy_tagger, [regex_annotator], None)
                                                    # [postlabeling_annotator])
         preprocessing_engine.preprocess(txt_docs)
 
@@ -145,8 +145,8 @@ class TestPreprocessing:
             filename = xmi_filenames[idx].split('.')
             # doc.write_xmi(''.join([output_dir_path, filename[0], '_from_', filename[1], '.xmi']), typesystem_filepath)
 
-        preprocessing_engine = PreprocessingEngine(annotators=[regex_annotator])
-        preprocessing_engine.preprocess(xmi_docs)
+        preprocessing_engine = ProcessingEngine(annotators=[regex_annotator])
+        preprocessing_engine.process(xmi_docs)
 
         for idx, doc in enumerate(xmi_docs):
             filename = xmi_filenames[idx].split('.')

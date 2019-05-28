@@ -1,4 +1,4 @@
-from common import uima
+from bedrock.common import uima
 
 class Layer:
     TOKEN = uima.StandardTypeNames.TOKEN

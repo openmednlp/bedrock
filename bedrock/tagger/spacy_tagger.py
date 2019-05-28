@@ -1,8 +1,8 @@
 from bedrock.doc.doc import Doc
-from doc.layer import Layer
-from doc.relation import Relation
-from doc.annotation import Annotation
-from doc.token import Token
+from bedrock.doc.layer import Layer
+from bedrock.doc.relation import Relation
+from bedrock.doc.annotation import Annotation
+from bedrock.doc.token import Token
 from bedrock.tagger.tagger import Tagger
 import spacy
 import pandas as pd
