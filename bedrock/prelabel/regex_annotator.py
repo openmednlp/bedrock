@@ -2,7 +2,6 @@ from bedrock.prelabel.findpattern import find_regex_pattern
 from bedrock.prelabel.annotator import Annotator
 from bedrock.doc.doc import Doc
 from doc.annotation import Annotation
-from doc.token import Token
 import pandas as pd
 
 

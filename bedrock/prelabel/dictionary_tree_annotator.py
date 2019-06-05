@@ -5,8 +5,8 @@ from functools import reduce
 import pandas as pd
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
-from nltk.stem.cistem import Cistem
 import _pickle as pickle
+from typing import Callable
 
 
 # Node class to generate a tree of words to reduce the search space, e.g. if we have to search for the terms
@@ -97,15 +97,17 @@ class DictionaryTreeAnnotator(Annotator):
     ADDED = 'added'
     PATH = 'path'
 
-    def __init__(self, origin: str, terms: List[str] = None, features: List[str] = None,
-                 feature_values: List[str] = None, saved_tree_path: str = None, print_progress: bool = False):
+    def __init__(self, origin: str, layer_name: str = "", terms: List[str] = None, features: List[str] = None,
+                 feature_values: List[str] = None, saved_tree_path: str = None, print_progress: bool = False,
+                 word_basic_form_fn: Callable[[str], str] = lambda word: word):
 
         if saved_tree_path is None and (len(terms) != len(feature_values) or len(feature_values) != len(features)):
             raise Exception('Lengths of terms, feature values and features vary.')
 
         self._print_progress = print_progress
         self._origin = origin
-        self._stemmer = Cistem()
+        self._layer_name = layer_name
+        self._stemmer_fn = word_basic_form_fn
 
         if saved_tree_path is None:
             self._data = pd.DataFrame(
@@ -199,7 +201,7 @@ class DictionaryTreeAnnotator(Annotator):
         t = t.apply(lambda x: list(filter(lambda a: len(a) > 2, x)))
 
         # find the stemming of the remaining words
-        t = t.apply(lambda x: list(map(self._stemmer.stem, x)))
+        t = t.apply(lambda x: list(map(self._stemmer_fn, x)))
         t = t.apply(lambda x: list(map(lambda a: {self.TERM: a, self.ADDED: False}, x)))
         data[self.SPLIT] = t
         data[self.LENGTH] = data[self.SPLIT].apply(lambda x: len(x))
@@ -251,6 +253,8 @@ class DictionaryTreeAnnotator(Annotator):
 
             nodes_to_visit = list()
             nodes_to_visit.append({self.TREE: self._tree, self.PATH: None})
+            old_index = 0
+            current_idx = 0
 
             while len(nodes_to_visit) > 0:
 
@@ -263,30 +267,33 @@ class DictionaryTreeAnnotator(Annotator):
                 if len(current_node[self.TREE].get_features()) > 0:
 
                     for current_feature in current_node[self.TREE].get_features():
-                        last_id = None
                         current_path.sort(key=self.__token_sorting_key)
                         for idx, token in enumerate(current_path):
+
                             new_annotations = new_annotations.append({
-                                Annotation.ID: token[Token.ID],
                                 Annotation.BEGIN: token[Token.BEGIN],
                                 Annotation.END: token[Token.END],
-                                Annotation.LAYER: Layer.TUMOR,
-                                Annotation.FEATURE: current_feature[Annotation.FEATURE],
+                                Annotation.LAYER: self._layer_name,
+                                Annotation.FEATURE:  current_feature[Annotation.FEATURE],
                                 Annotation.FEATURE_VAL: current_feature[Annotation.FEATURE_VAL]
                             }, ignore_index=True)
+                            current_idx = max(list(new_annotations.index.values))
+
                             if len(current_path) > 1 and idx > 0:
                                 new_relations = new_relations.append({
-                                    Relation.GOV_ID: token[Token.ID],
-                                    Relation.DEP_ID: last_id,
+                                    Relation.GOV_ID: old_index,
+                                    Relation.DEP_ID: current_idx,
+                                    Relation.LAYER: self._layer_name,
                                     Relation.BEGIN: token[Token.BEGIN],
+                                    Relation.END: token[Token.END],
                                     Relation.FEATURE: current_feature[Annotation.FEATURE],
                                     Relation.FEATURE_VAL: current_feature[Annotation.FEATURE_VAL]
                                 }, ignore_index=True)
 
-                            last_id = token[Token.ID]
+                            old_index = current_idx
 
                 for sentence_index, sentence_token_row in sentence_tokens.iterrows():
-                    text = self._stemmer.stem(sentence_token_row[Token.TEXT])
+                    text = self._stemmer_fn(sentence_token_row[Token.TEXT])
 
                     # for short words the comparison score has to be higher than for long words
                     min_score_cutoff = 100 if len(text) < 5 else 85
