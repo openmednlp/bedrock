@@ -5,8 +5,8 @@ from functools import reduce
 import pandas as pd
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
-from nltk.stem.cistem import Cistem
 import _pickle as pickle
+from typing import Callable
 
 
 # Node class to generate a tree of words to reduce the search space, e.g. if we have to search for the terms
@@ -98,14 +98,15 @@ class DictionaryTreeAnnotator(Annotator):
     PATH = 'path'
 
     def __init__(self, origin: str, terms: List[str] = None, features: List[str] = None,
-                 feature_values: List[str] = None, saved_tree_path: str = None, print_progress: bool = False):
+                 feature_values: List[str] = None, saved_tree_path: str = None, print_progress: bool = False,
+                 word_basic_form_fn: Callable[[str], str] = lambda word: word):
 
         if saved_tree_path is None and (len(terms) != len(feature_values) or len(feature_values) != len(features)):
             raise Exception('Lengths of terms, feature values and features vary.')
 
         self._print_progress = print_progress
         self._origin = origin
-        self._stemmer = Cistem()
+        self._stemmer_fn = word_basic_form_fn
 
         if saved_tree_path is None:
             self._data = pd.DataFrame(
@@ -199,7 +200,7 @@ class DictionaryTreeAnnotator(Annotator):
         t = t.apply(lambda x: list(filter(lambda a: len(a) > 2, x)))
 
         # find the stemming of the remaining words
-        t = t.apply(lambda x: list(map(self._stemmer.stem, x)))
+        t = t.apply(lambda x: list(map(self._stemmer_fn, x)))
         t = t.apply(lambda x: list(map(lambda a: {self.TERM: a, self.ADDED: False}, x)))
         data[self.SPLIT] = t
         data[self.LENGTH] = data[self.SPLIT].apply(lambda x: len(x))
@@ -286,7 +287,7 @@ class DictionaryTreeAnnotator(Annotator):
                             last_id = token[Token.ID]
 
                 for sentence_index, sentence_token_row in sentence_tokens.iterrows():
-                    text = self._stemmer.stem(sentence_token_row[Token.TEXT])
+                    text = self._stemmer_fn(sentence_token_row[Token.TEXT])
 
                     # for short words the comparison score has to be higher than for long words
                     min_score_cutoff = 100 if len(text) < 5 else 85
