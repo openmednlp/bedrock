@@ -51,12 +51,13 @@ class TestPreprocessing:
         regex_annotator = RegexAnnotator(tnm_regex_patterns, Layer.TUMOR)
 
         # initialize dictionary labeler
-        # dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
-        # dictionary = dictionary[dictionary['languageCode'] == 'de']
-        # dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
-        # dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler', dictionary['term'].tolist(),
-        #                                          dictionary['Group'].tolist(),
-        #                                          dictionary['referencedComponentId'].tolist())
+        dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
+        dictionary = dictionary[dictionary['languageCode'] == 'de']
+        dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
+        dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler', Layer.TUMOR,
+                                                 dictionary['term'].tolist(),
+                                                 dictionary['Group'].tolist(),
+                                                 dictionary['referencedComponentId'].tolist())
 
         # load the dictionary from a pickle file
         # dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler',
@@ -72,7 +73,7 @@ class TestPreprocessing:
 
 
         # build preprocessing engine and start it
-        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator], None)
+        preprocessing_engine = PreprocessingEngine(spacy_tagger, [regex_annotator, dict_annotator], None)
                                                    # [postlabeling_annotator])
         preprocessing_engine.preprocess(txt_docs)
 
