@@ -2,6 +2,8 @@ import unittest
 import os
 from bedrock.doc.doc_factory import DocFactory
 from bedrock.prelabel.regex_annotator import RegexAnnotator
+from bedrock.prelabel.dictionary_tree_annotator import DictionaryTreeAnnotator
+from bedrock.doc.layer import Layer
 from bedrock.tagger.spacy_tagger import SpacyTagger
 from dotenv import load_dotenv
 from pandas import DataFrame
@@ -111,12 +113,13 @@ class TestPreprocessing:
         regex_annotator = RegexAnnotator(tnm_regex_patterns, TUMOR)
 
         # initialize dictionary labeler
-        # dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
-        # dictionary = dictionary[dictionary['languageCode'] == 'de']
-        # dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
-        # dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler', dictionary['term'].tolist(),
-        #                                          dictionary['Group'].tolist(),
-        #                                          dictionary['referencedComponentId'].tolist())
+        dictionary = pd.read_csv(os.getenv("ICD_O_FILE_PATH"), sep='\t')
+        dictionary = dictionary[dictionary['languageCode'] == 'de']
+        dictionary = dictionary.drop(columns=['effectiveTime', 'languageCode', 'Source'])
+        dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler', Layer.TUMOR,
+                                                 dictionary['term'].tolist(),
+                                                 dictionary['Group'].tolist(),
+                                                 dictionary['referencedComponentId'].tolist())
 
         # load the dictionary from a pickle file
         # dict_annotator = DictionaryTreeAnnotator('fuzzy-dictionary-tree-labeler',
@@ -132,8 +135,7 @@ class TestPreprocessing:
 
 
         # build preprocessing engine and start it
-        preprocessing_engine = ProcessingEngine(spacy_tagger, [regex_annotator], None)
-                                                   # [postlabeling_annotator])
+        preprocessing_engine = ProcessingEngine(spacy_tagger, [regex_annotator, dict_annotator], None)
         preprocessing_engine.preprocess(txt_docs)
 
         for idx, doc in enumerate(txt_docs):
