@@ -9,14 +9,17 @@ import json
 
 class TestPipeline(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super(TestPipeline, self).__init__(*args, **kwargs)
-        self.__pipeline = Pipeline(language='de')
+    @classmethod
+    def setUpClass(cls):
+        print('init')
+        cls.__pipeline = Pipeline(language='de')
 
     def setUp(self):
+        print('setup')
         self.__pipeline = self.__pipeline.clear()
 
     def test_parse_text(self):
+        print(1)
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text = f.read()
         docs = self.__pipeline.parse_text(file_text).get_docs()
@@ -25,6 +28,7 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(doc.get_text(), utils.preprocess_text(file_text))
 
     def test_get_docs(self):
+        print(2)
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text1 = f.read()
         with open('tests/data/input/TNM_2.txt', 'r') as f:
@@ -37,6 +41,7 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(doc2.get_text(), utils.preprocess_text(file_text2))
 
     def test_parse_from_xmi(self):
+        print(3)
         docs = self.__pipeline.parse_cas('tests/data/input/TNM_1.xmi',
                                                               'tests/data/input/typesystem.xml').get_docs()
 
@@ -61,7 +66,7 @@ class TestPipeline(unittest.TestCase):
         annotations = doc.get_annotations()
         relations = doc.get_relations()
         self.assertEqual(tokens.shape[0], 169)
-        self.assertEqual(annotations.shape[0], 357)
+        self.assertEqual(annotations.shape[0], 362)
         self.assertEqual(relations.shape[0], 169)
         self.assertEqual(doc.get_text(), utils.preprocess_text(file_text))
 
