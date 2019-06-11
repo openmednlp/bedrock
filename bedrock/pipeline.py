@@ -6,11 +6,27 @@ from bedrock.doc.relation import Relation
 
 class Pipeline:
     def __init__(self, language='en'):
+        # set tagger language
+        self._language = 'xx_ent_wiki_sm'
+        if language == 'en':
+            self._language = 'en_core_web_md'
+        elif language == 'de':
+            self._language = 'de_core_news_md'
+        elif language == 'fr':
+            self._language = 'fr_core_news_md'
+
         self._docs = []
-        self._tagger = SpacyTagger(language=language)
+        self._tagger = SpacyTagger(language=self._language)
         self._annotators = []
         self._post_labeling_annotators = []
         self._doc_factory = DocFactory()
+
+    def clear(self):
+        self._docs = []
+        self._annotators = []
+        self._post_labeling_annotators = []
+        self._doc_factory = DocFactory()
+        return self
 
     def get_docs(self):
         return self._docs

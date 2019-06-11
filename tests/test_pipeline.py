@@ -9,10 +9,17 @@ import json
 
 class TestPipeline(unittest.TestCase):
 
+    def __init__(self, *args, **kwargs):
+        super(TestPipeline, self).__init__(*args, **kwargs)
+        self.__pipeline = Pipeline(language='de')
+
+    def setUp(self):
+        self.__pipeline = self.__pipeline.clear()
+
     def test_parse_text(self):
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text = f.read()
-        docs = Pipeline(language='de_core_news_sm').parse_text(file_text).get_docs()
+        docs = self.__pipeline.parse_text(file_text).get_docs()
         self.assertEqual(len(docs), 1)
         doc = docs[0]
         self.assertEqual(doc.get_text(), utils.preprocess_text(file_text))
@@ -22,7 +29,7 @@ class TestPipeline(unittest.TestCase):
             file_text1 = f.read()
         with open('tests/data/input/TNM_2.txt', 'r') as f:
             file_text2 = f.read()
-        docs = Pipeline(language='de_core_news_sm').parse_text(file_text1).parse_text(file_text2).get_docs()
+        docs = self.__pipeline.parse_text(file_text1).parse_text(file_text2).get_docs()
         self.assertEqual(len(docs), 2)
         doc1 = docs[0]
         doc2 = docs[1]
@@ -30,7 +37,7 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(doc2.get_text(), utils.preprocess_text(file_text2))
 
     def test_parse_from_xmi(self):
-        docs = Pipeline(language='de_core_news_sm').parse_cas('tests/data/input/TNM_1.xmi',
+        docs = self.__pipeline.parse_cas('tests/data/input/TNM_1.xmi',
                                                               'tests/data/input/typesystem.xml').get_docs()
 
         doc = docs[0]
@@ -40,7 +47,7 @@ class TestPipeline(unittest.TestCase):
     def test_set_tags(self):
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text = f.read()
-        pipeline = Pipeline(language='de_core_news_sm').parse_text(file_text)
+        pipeline = self.__pipeline.parse_text(file_text)
         doc = pipeline.get_docs()[0]
         tokens = doc.get_tokens()
         annotations = doc.get_annotations()
@@ -61,7 +68,7 @@ class TestPipeline(unittest.TestCase):
     def test_set_annotations(self):
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text = f.read()
-        pipeline = Pipeline(language='de_core_news_sm').parse_text(file_text).set_tags()
+        pipeline = self.__pipeline.parse_text(file_text).set_tags()
         pipeline.set_annotator(DictionaryTreeAnnotator('dictionary-tree-annotator', 'layer',
                                                        ['Plattenepithelkarzinom', 'Resektionsrand', 'Lymphknoten'],
                                                        ['what', 'where', 'where'], ['1', '2', '3']))
@@ -78,7 +85,7 @@ class TestPipeline(unittest.TestCase):
     def test_run_postlabeling(self):
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text = f.read()
-        pipeline = Pipeline(language='de_core_news_sm').parse_text(file_text).set_tags()
+        pipeline = self.__pipeline.parse_text(file_text).set_tags()
         pipeline.set_annotator(DictionaryTreeAnnotator('dictionary-tree-annotator', 'layer',
                                                        ['Plattenepithelkarzinom', 'Resektionsrand', 'Lymphknoten'],
                                                        ['what', 'where', 'where'], ['1', '2', '3']))
