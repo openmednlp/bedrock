@@ -54,7 +54,7 @@ class TestPipeline(unittest.TestCase):
         annotations = doc.get_annotations()
         relations = doc.get_relations()
         self.assertEqual(tokens.shape[0], 169)
-        self.assertEqual(annotations.shape[0], 357)
+        self.assertEqual(annotations.shape[0], 359)
         self.assertEqual(relations.shape[0], 169)
         self.assertEqual(doc.get_text(), utils.preprocess_text(file_text))
 
