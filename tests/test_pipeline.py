@@ -34,8 +34,8 @@ class TestPipeline(unittest.TestCase):
                                                               'tests/data/input/typesystem.xml').get_docs()
 
         doc = docs[0]
-        self.assertEqual(len(doc.get_annotations().index), 185)
-        self.assertEqual(len(doc.get_tokens().index), 177)
+        self.assertEqual(doc.get_annotations().shape[0], 185)
+        self.assertEqual(doc.get_tokens().shape[0], 177)
 
     def test_set_tags(self):
         with open('tests/data/input/TNM_1.txt', 'r') as f:
@@ -45,18 +45,17 @@ class TestPipeline(unittest.TestCase):
         tokens = doc.get_tokens()
         annotations = doc.get_annotations()
         relations = doc.get_relations()
-        print(len(tokens.index), len(annotations.index), len(relations.index))
-        self.assertEqual(len(tokens.index), 0)
-        self.assertEqual(len(annotations.index), 0)
-        self.assertEqual(len(relations.index), 0)
+        self.assertEqual(tokens.shape[0], 0)
+        self.assertEqual(annotations.shape[0], 0)
+        self.assertEqual(relations.shape[0], 0)
 
         doc = pipeline.set_tags().get_docs()[0]
         tokens = doc.get_tokens()
         annotations = doc.get_annotations()
         relations = doc.get_relations()
-        self.assertEqual(len(tokens.index), 169)
-        self.assertEqual(len(annotations.index), 357)
-        self.assertEqual(len(relations.index), 169)
+        self.assertEqual(tokens.shape[0], 169)
+        self.assertEqual(annotations.shape[0], 357)
+        self.assertEqual(relations.shape[0], 169)
         self.assertEqual(doc.get_text(), utils.preprocess_text(file_text))
 
     def test_set_annotations(self):
@@ -70,11 +69,11 @@ class TestPipeline(unittest.TestCase):
         doc = docs[0]
         annotations = doc.get_annotations()
         annotations = annotations[annotations[Annotation.LAYER] == 'layer']
-        self.assertEqual(len(annotations.index), 6)
+        self.assertEqual(annotations.shape[0], 6)
         where = annotations[annotations[Annotation.FEATURE] == 'where']
-        self.assertEqual(len(where.index), 4)
+        self.assertEqual(where.shape[0], 4)
         what = annotations[annotations[Annotation.FEATURE] == 'what']
-        self.assertEqual(len(what.index), 2)
+        self.assertEqual(what.shape[0], 2)
 
     def test_run_postlabeling(self):
         with open('tests/data/input/TNM_1.txt', 'r') as f:
@@ -93,11 +92,11 @@ class TestPipeline(unittest.TestCase):
         doc = docs[0]
         annotations = doc.get_annotations()
         annotations = annotations[annotations[Annotation.LAYER] == 'layer']
-        self.assertEqual(len(annotations.index), 2)
+        self.assertEqual(annotations.shape[0], 2)
         where = annotations[annotations[Annotation.FEATURE] == 'where']
-        self.assertEqual(len(where.index), 0)
+        self.assertEqual(where.shape[0], 0)
         what = annotations[annotations[Annotation.FEATURE] == 'what']
-        self.assertEqual(len(what.index), 2)
+        self.assertEqual(what.shape[0], 2)
 
 
 if __name__ == '__main__':
