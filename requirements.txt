@@ -1,6 +1,6 @@
+spacy==2.1.4
 nltk==3.4.1
 pandas==0.22.0
-spacy==2.1.4
 pypandoc==1.4
 gensim==3.4.0
 texttable==1.2.1
