@@ -4,6 +4,7 @@ from bedrock.common.cas2df import CAS2DataFrameConverter
 from typing import Any
 from bedrock.common.cas_converter_fns import CASConverterFns
 import bedrock.common.utils as utils
+import os
 
 
 class DocFactory:
@@ -48,6 +49,20 @@ class DocFactory:
         if xmi_filename is not None:
             doc.set_filename(xmi_filename)
         cas = CasFactory().buildCASfromStrings(xmi_content, type_content)
+        tokens, annotations, relations = self.__cas_converter.get_dataframes(cas)
+        doc.set_text(cas.documentText)
+        doc.set_tokens(tokens)
+        doc.set_annotations(annotations)
+        doc.set_relations(relations)
+        return doc
+
+    def create_doc_from_xmi_path(self, xmi_path: str, type_path: str) -> Doc:
+        doc = Doc()
+        for layer_name in self.__cas_converter_fns:
+            doc.register_converter_function(layer_name, self.__cas_converter_fns[layer_name])
+        _, filename = os.path.split(xmi_path)
+        doc.set_filename(filename)
+        cas = CasFactory().buildCAS(xmi_path, type_path)
         tokens, annotations, relations = self.__cas_converter.get_dataframes(cas)
         doc.set_text(cas.documentText)
         doc.set_tokens(tokens)

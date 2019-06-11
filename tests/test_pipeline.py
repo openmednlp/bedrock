@@ -42,9 +42,7 @@ class TestPipeline(unittest.TestCase):
 
     def test_parse_from_xmi(self):
         print(3)
-        docs = self.__pipeline.parse_cas('tests/data/input/TNM_1.xmi',
-                                                              'tests/data/input/typesystem.xml').get_docs()
-
+        docs = self.__pipeline.parse_cas('tests/data/input/TNM_1.xmi', 'tests/data/input/typesystem.xml').get_docs()
         doc = docs[0]
         self.assertEqual(doc.get_annotations().shape[0], 185)
         self.assertEqual(doc.get_tokens().shape[0], 177)

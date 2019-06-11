@@ -37,12 +37,7 @@ class Pipeline:
         return self
 
     def parse_cas(self, xmi_file_path: str, type_system_file_path: str):
-        with open(type_system_file_path, 'r') as f:
-            type_system = f.read()
-        with open(xmi_file_path, 'r') as f:
-            xmi_content = f.read()
-
-        doc = self._doc_factory.create_doc_from_xmi(xmi_content, type_system)
+        doc = self._doc_factory.create_doc_from_xmi_path(xmi_file_path, type_system_file_path)
         self._docs.append(doc)
         return self
 
