@@ -212,3 +212,18 @@ class Doc:
             return max_annotations_index + 1
 
         return max_relations_index + 1
+
+    def remove_annotations(self, indices: [int]):
+        '''
+            remove annotations and relations containing these annotations
+        '''
+        # remove relations
+        relations = self.get_relations()
+        remove_relations = relations[Relation.GOV_ID].isin(indices) | relations[Relation.DEP_ID].isin(indices)
+        if sum(remove_relations) > 0:
+            relations = relations[remove_relations == False]
+            self.set_relations(relations)
+        # remove annotations
+        annotations = self.get_annotations()
+        annotations.drop(index=indices, inplace=True)
+        self.set_annotations(annotations)
