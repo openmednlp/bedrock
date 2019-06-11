@@ -5,8 +5,19 @@ import pypandoc
 with open('README.md', encoding='utf-8') as f:
     long_description = pypandoc.convert(f.read(), "rst", format="md")
 
-with open('requirements.txt') as f:
-    reqs = f.read().splitlines()
+reqs = [
+    'spacy==2.1.4',
+    'nltk==3.4.1',
+    'pandas==0.22.0',
+    'pypandoc==1.4',
+    'gensim==3.4.0',
+    'texttable==1.2.1',
+    'fuzzywuzzy',
+    'fuzzysearch',
+    'python-Levenshtein',
+    'pandasql',
+    'dkpro-pycas'
+]
 
 setup(
     name='bedrock',
@@ -30,6 +41,9 @@ setup(
         'Topic :: Software Development :: Libraries',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
+    ],
+    dependency_links=[
+        'git+https://github.com/dkpro/dkpro-pycas.git@d23aabbab853d1c04f3544ccc764ec2c19973441#egg=dkpro-pycas-0.1.1a'
     ],
     scripts=['bin/bedrock'],
 )
