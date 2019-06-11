@@ -5,17 +5,8 @@ import pypandoc
 with open('README.md', encoding='utf-8') as f:
     long_description = pypandoc.convert(f.read(), "rst", format="md")
 
-reqs = [
-    'matplotlib==2.2.2',
-    'nltk==3.2.5',
-    'pandas==0.22.0',
-    'spacy==2.0.11',
-    'wordcloud==1.4.1',
-    'pillow==5.1.0',
-    'scikit-learn==0.19.1',
-    'gensim==3.4.0',
-    'texttable==1.2.1'
-]
+with open('requirements.txt') as f:
+    reqs = f.read().splitlines()
 
 setup(
     name='bedrock',
