@@ -70,6 +70,6 @@ Import modules from package in your code:
 ```python
 from bedrock.pipeline import Pipeline                       # Processing texts
 from bedrock.prelabel.annotator import Annotator            # Annotator interface
-from bedrock.prelabel.dictionary_tree_annotator import DictionaryTreeAnnotator # Prebuilt dictionary annotator
+from bedrock.prelabel.dictionary_annotator import DictionaryAnnotator # Prebuilt dictionary annotator
 from bedrock.prelabel.regex_annotator import RegexAnnotator # Prebuild regex annotator
 ```
