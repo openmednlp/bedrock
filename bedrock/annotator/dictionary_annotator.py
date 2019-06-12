@@ -1,5 +1,9 @@
 from bedrock.prelabel.annotator import Annotator
-from bedrock.doc.doc import Doc, Token, Annotation, Relation, Layer
+from bedrock.doc.doc import Doc
+from bedrock.doc.token import Token
+from bedrock.doc.annotation import Annotation
+from bedrock.doc.relation import Relation
+from bedrock.doc.layer import Layer
 from typing import List
 from functools import reduce
 import pandas as pd
@@ -85,9 +89,9 @@ class Node:
         self.print_tree(0)
 
 
-# DictionaryTreeAnnotator is the actual implementation of the annotator. It searches terms in the dictionary in the
+# DictionaryAnnotator is the actual implementation of the annotator. It searches terms in the dictionary in the
 # sentences of a document and will give back a list of annotations and relations
-class DictionaryTreeAnnotator(Annotator):
+class DictionaryAnnotator(Annotator):
 
     ROOT = 'root'
     TREE = 'tree'

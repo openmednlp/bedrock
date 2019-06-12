@@ -100,7 +100,11 @@ ENV/
 # mypy
 .mypy_cache/
 
+# data files
 *.csv
+*.json
+*.xmi
+*.xml
 
 # project based
 .idea
