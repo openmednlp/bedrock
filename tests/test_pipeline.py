@@ -1,9 +1,9 @@
 import unittest
 from bedrock.pipeline import Pipeline
 import bedrock.common.utils as utils
-from bedrock.prelabel.dictionary_annotator import DictionaryAnnotator
+from bedrock.annotator.dictionary_annotator import DictionaryAnnotator
 from bedrock.doc.annotation import Annotation
-from bedrock.prelabel.postlabeling_annotator import PostlabelingAnnotator
+from bedrock.annotator.postlabeling_annotator import PostlabelingAnnotator
 import json
 
 
