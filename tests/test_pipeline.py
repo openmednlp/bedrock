@@ -1,7 +1,7 @@
 import unittest
 from bedrock.pipeline import Pipeline
 import bedrock.common.utils as utils
-from bedrock.prelabel.dictionary_tree_annotator import DictionaryTreeAnnotator
+from bedrock.prelabel.dictionary_annotator import DictionaryAnnotator
 from bedrock.doc.annotation import Annotation
 from bedrock.prelabel.postlabeling_annotator import PostlabelingAnnotator
 import json
@@ -72,7 +72,7 @@ class TestPipeline(unittest.TestCase):
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text = f.read()
         pipeline = self.__pipeline.parse_text(file_text).set_tags()
-        pipeline.set_annotator(DictionaryTreeAnnotator('dictionary-tree-annotator', 'layer',
+        pipeline.set_annotator(DictionaryAnnotator('dictionary-annotator', 'layer',
                                                        ['Plattenepithelkarzinom', 'Resektionsrand', 'Lymphknoten'],
                                                        ['what', 'where', 'where'], ['1', '2', '3']))
         docs = pipeline.set_annotations().get_docs()
@@ -89,7 +89,7 @@ class TestPipeline(unittest.TestCase):
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text = f.read()
         pipeline = self.__pipeline.parse_text(file_text).set_tags()
-        pipeline.set_annotator(DictionaryTreeAnnotator('dictionary-tree-annotator', 'layer',
+        pipeline.set_annotator(DictionaryAnnotator('dictionary-annotator', 'layer',
                                                        ['Plattenepithelkarzinom', 'Resektionsrand', 'Lymphknoten'],
                                                        ['what', 'where', 'where'], ['1', '2', '3']))
         post_labeling_rules = json.loads('[{\

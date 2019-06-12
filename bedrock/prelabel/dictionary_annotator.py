@@ -89,9 +89,9 @@ class Node:
         self.print_tree(0)
 
 
-# DictionaryTreeAnnotator is the actual implementation of the annotator. It searches terms in the dictionary in the
+# DictionaryAnnotator is the actual implementation of the annotator. It searches terms in the dictionary in the
 # sentences of a document and will give back a list of annotations and relations
-class DictionaryTreeAnnotator(Annotator):
+class DictionaryAnnotator(Annotator):
 
     ROOT = 'root'
     TREE = 'tree'
