@@ -19,7 +19,7 @@ reqs = [
 
 setup(
     name='bedrock',
-    version='0.1.0.dev11',
+    version='0.1.0.dev12',
     description=("Bedrock is a high-level text pre-processing API, "
                  "written in Python and can run on NLTK or Spacy "
                  "as its backends."),
@@ -28,7 +28,7 @@ setup(
     author='Ivan Nesic',
     author_email='ivan.nesic@usb.ch',
     url='http://github.com/openmednlp/bedrock',
-    python_requires='>=3',
+    python_requires='>=3.6',
     packages=find_packages(include=['bedrock', 'bedrock.*']),
     install_requires=reqs,
     license='MIT',
