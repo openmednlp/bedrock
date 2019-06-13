@@ -68,8 +68,8 @@ bedrock download fr
 
 Import modules from package in your code:
 ```python
-from bedrock.pipeline import Pipeline                       # Processing texts
-from bedrock.prelabel.annotator import Annotator            # Annotator interface
-from bedrock.prelabel.dictionary_annotator import DictionaryAnnotator # Prebuilt dictionary annotator
-from bedrock.prelabel.regex_annotator import RegexAnnotator # Prebuild regex annotator
+from bedrock.pipeline import Pipeline                        # Processing texts
+from bedrock.annotator.annotator import Annotator            # Annotator interface
+from bedrock.annotator.dictionary_annotator import DictionaryAnnotator # Prebuilt dictionary annotator
+from bedrock.annotator.regex_annotator import RegexAnnotator # Prebuild regex annotator
 ```
