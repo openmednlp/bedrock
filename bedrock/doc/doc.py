@@ -1,26 +1,37 @@
 import pandas as pd
 
-from doc.annotation import Annotation
-from doc.layer import Layer
-from doc.relation import Relation
-from doc.token import Token
+from bedrock.doc.annotation import Annotation
+from bedrock.doc.relation import Relation
+from bedrock.doc.token import Token
 from pycas.type.cas import TypeSystemFactory
 from pycas.cas.core import CAS
 from pycas.cas.writer import XmiWriter
 from bedrock.common import uima, utils
+import warnings
+from typing import Any
+from bedrock.common.cas_converter_fns import CASConverterFns
 
 
 class Doc:
 
-    def __init__(self):
-        # TODO add uid, report_type, date, patient_number
-        # TODO improvment by passing filename and text to constructor
-        self.__text = ""
-        self.__filename = ""
+    def __init__(self, text: str = "", filename: str = "", converter_2_df_functions=None):
+        self.__text = text
+        self.__filename = filename
         self.__tokens = pd.DataFrame(columns=Token.COLS)
         self.__annotations = pd.DataFrame(columns=Annotation.COLS)
         self.__relations = pd.DataFrame(columns=Relation.COLS)
-        self._meta_data = dict()
+        self._meta_data = {}
+
+        if converter_2_df_functions is None:
+            self.__converter_fns = CASConverterFns.get_2_cas_functions()
+        else:
+            self.__converter_fns = converter_2_df_functions
+
+    def register_converter_function(self, layer_name: str, function: Any):
+        self.__converter_fns[layer_name] = function
+
+    def unregister_converter_function(self, layer_name: str):
+        self.__converter_fns[layer_name] = None
 
     def set_text(self, text: str):
         self.__text = text
@@ -40,7 +51,7 @@ class Doc:
     def get_annotations(self) -> pd.DataFrame:
         return self.__annotations
 
-    def append_annotions(self, annotations: pd.DataFrame, ignore_index: bool):
+    def append_annotations(self, annotations: pd.DataFrame, ignore_index: bool):
         if annotations is not None:
             self.__annotations = self.__annotations.append(annotations, ignore_index=ignore_index)
 
@@ -70,62 +81,28 @@ class Doc:
         cas.documentText = self.get_text()
         cas.sofaMimeType = 'text'
 
-
-        # self.__annotations[Annotation.BEGIN] = self.__annotations[Annotation.BEGIN].astype(int)
-
         # iterate over annotations
         for index, annotation in self.__annotations.iterrows():
 
             layer = annotation[Annotation.LAYER]
             fs_anno = None
 
-            if layer == Layer.TOKEN:
-                fs_anno = cas.createAnnotation(uima.StandardTypeNames.TOKEN, {
-                    uima.ID: index,
-                    uima.BEGIN: int(annotation[Annotation.BEGIN]),
-                    uima.END: int(annotation[Annotation.END])
-                })
-            elif layer == Layer.POS:
-                fs_anno = cas.createAnnotation(uima.StandardTypeNames.POS, {
-                    uima.ID: index,
-                    uima.BEGIN: int(annotation[Annotation.BEGIN]),
-                    uima.END: int(annotation[Annotation.END]),
-                    uima.PosFeatureNames.POS_VALUE: annotation[Annotation.FEATURE_VAL]
-                })
-            elif layer == Layer.TUMOR:
-                fs_anno = cas.createAnnotation(uima.CustomTypeNames.TUMOR, {
-                    uima.ID: index,
-                    uima.BEGIN: int(annotation[Annotation.BEGIN]),
-                    uima.END: int(annotation[Annotation.END]),
-                    annotation[Annotation.FEATURE]: annotation[Annotation.FEATURE_VAL]
-                })
-            elif layer == Layer.SENTENCE:
-                fs_anno = cas.createAnnotation(uima.StandardTypeNames.SENTENCE, {
-                    uima.ID: index,
-                    uima.BEGIN: int(annotation[Annotation.BEGIN]),
-                    uima.END: int(annotation[Annotation.END])
-                })
+            if layer in self.__converter_fns:
+                fs_anno = self.__converter_fns[layer](cas, layer, index, annotation)
             else:
-                print(str(annotation) + ' unknown annotation')
+                warnings.warn(str(annotation) + ' unknown annotation')
 
             if fs_anno is not None:
                 cas.addToIndex(fs_anno)
 
         for index, relation in self.__relations.iterrows():
 
-            if relation[Relation.LAYER] == Layer.DEPENDENCY:
-                fs_anno = cas.createAnnotation(uima.StandardTypeNames.DEPENDENCY, {
-                    uima.ID: index,
-                    uima.BEGIN: int(relation[Relation.BEGIN]),
-                    uima.END: int(relation[Relation.END]),
-                    uima.DependencyFeatureNames.DEPENDENCY_TYPE: relation[Relation.FEATURE_VAL]
-                })
-            elif relation[Relation.LAYER] == Layer.TUMOR_RELATION:
-                fs_anno = cas.createAnnotation(uima.CustomTypeNames.TUMOR_REL, {
-                    uima.ID: index,
-                    uima.BEGIN: int(relation[Relation.BEGIN]),
-                    uima.END: int(relation[Relation.END])
-                })
+            layer = relation[Relation.LAYER]
+            fs_anno = None
+
+            if layer in self.__converter_fns:
+                fs_anno = self.__converter_fns[layer](cas, layer, index, relation)
+
             else:
                 raise ValueError('unknown relation layer')
 
@@ -202,7 +179,6 @@ class Doc:
                 .reset_index().rename(columns={0: Annotation.FEATURE_VAL})
 
             if tmp_annotations_token_df.empty is False:
-                print('empty')
                 tmp_annotations_token_df.loc[:, pivot_name] = tmp_annotations_token_df[Annotation.LAYER] + "." + \
                                                           tmp_annotations_token_df[Annotation.FEATURE].fillna('')
                 tmp_annotations_token_df = tmp_annotations_token_df.pivot(index=Token.ID, values=Annotation.FEATURE_VAL,
@@ -236,3 +212,18 @@ class Doc:
             return max_annotations_index + 1
 
         return max_relations_index + 1
+
+    def remove_annotations(self, indices: [int]):
+        '''
+            remove annotations and relations containing these annotations
+        '''
+        # remove relations
+        relations = self.get_relations()
+        remove_relations = relations[Relation.GOV_ID].isin(indices) | relations[Relation.DEP_ID].isin(indices)
+        if sum(remove_relations) > 0:
+            relations = relations[remove_relations == False]
+            self.set_relations(relations)
+        # remove annotations
+        annotations = self.get_annotations()
+        annotations.drop(index=indices, inplace=True)
+        self.set_annotations(annotations)

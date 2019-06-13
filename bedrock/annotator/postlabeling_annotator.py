@@ -1,4 +1,4 @@
-from bedrock.prelabel.annotator import Annotator
+from bedrock.annotator.annotator import Annotator
 from bedrock.doc.doc import Doc, Token, Annotation, Relation
 import pandas as pd
 
@@ -93,19 +93,18 @@ class PostlabelingAnnotator(Annotator):
             annotations_to_hold = annotations_to_hold.append(rule_affected_annotations)
 
         # all annotation that fulfil the required rule
-        annotations_ids_to_stay = annotations_to_hold[annotations_to_hold[self.LEAVE] == True][Annotation.ID]\
-            .drop_duplicates().tolist()
+        annotations_ids_to_stay = annotations_to_hold[annotations_to_hold[self.LEAVE] == True].index.tolist()
 
         # all annotations that are affected by the rule but do not fulfil it
-        annotations_ids_to_remove = list(set(rule_affected_annotations[Annotation.ID].tolist()) -
+        annotations_ids_to_remove = list(set(rule_affected_annotations.index.tolist()) -
                                          set(annotations_ids_to_stay))
 
         # filter out all annotations their id is in the annotations to remove list
-        new_annotations = current_annotations[~current_annotations[Annotation.ID].isin(annotations_ids_to_remove)]
+        current_annotations.drop(index=annotations_ids_to_remove, inplace=True)
 
         # filter out all relations that are based on a remove annotation
-        new_relations = current_relations[~(current_relations[Relation.ID].isin(annotations_ids_to_remove) |
-                                            current_relations[Relation.DEP_ID].isin(annotations_ids_to_remove) |
-                                            current_relations[Relation.GOV_ID].isin(annotations_ids_to_remove))]
+        remove_relations = current_relations[Relation.GOV_ID].isin(annotations_ids_to_remove) |\
+                           current_relations[Relation.DEP_ID].isin(annotations_ids_to_remove)
+        new_relations = current_relations[remove_relations == False]
 
-        return new_annotations, new_relations
+        return current_annotations, new_relations

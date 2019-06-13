@@ -1,9 +1,8 @@
-from bedrock.prelabel.findpattern import find_regex_pattern
-from bedrock.prelabel.annotator import Annotator
+from bedrock.annotator.annotator import Annotator
 from bedrock.doc.doc import Doc
 from doc.annotation import Annotation
-from doc.token import Token
 import pandas as pd
+import re
 
 
 class RegexAnnotator(Annotator):
@@ -12,12 +11,26 @@ class RegexAnnotator(Annotator):
         self.__patterns = patterns
         self.__layer_name = layer_name
 
+    def _find_regex_pattern(regex, text):
+        reg = re.compile(regex)
+        vec = []
+        match = []
+        string = ''
+
+        for el in re.finditer(reg, text):
+            if el:
+                indices = el.span()
+                vec.append(indices)
+                match.append(el.group())
+                string = string + text[indices[0]:indices[1]] + ', '
+        return vec, match
+
     def get_annotations(self, doc: Doc) -> (pd.DataFrame, pd.DataFrame):
         annotations = pd.DataFrame()
         relations = pd.DataFrame()
         for key1, value in self.__patterns.items():
             for key2, value2 in value.items():
-                vec, match = find_regex_pattern(str(value2['regex']), doc.get_text())
+                vec, match = self._find_regex_pattern(str(value2['regex']), doc.get_text())
                 for v in vec:
                     begin = int(v[0])
                     end = int(v[1])

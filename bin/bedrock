@@ -11,13 +11,18 @@ if [ $1 = download ]
 then
     if [ $2 = 'all' ]
     then
-        python -m spacy download xx
+        python -m spacy download de_core_news_md
+        python -m spacy download en_core_web_md
+        python -m spacy download fr_core_news_md
     elif [ $2 = 'de' ] || [ $2 = 'german' ] || [ $2 = 'deutsch' ]
     then
-        python -m spacy download de
+        python -m spacy download de_core_news_md
     elif [ $2 = 'en' ] || [ $2 = 'english' ]
     then
-        python -m spacy download de
+        python -m spacy download en_core_web_md
+    elif [ $2 = 'fr' ] || [ $2 = 'french' ]
+    then
+        python -m spacy download fr_core_news_md
 
     else
         echo Not implemented for separate languages just yet.
