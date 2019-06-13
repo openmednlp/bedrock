@@ -1,8 +1,8 @@
 from bedrock.doc.doc import Doc
-from doc.layer import Layer
-from doc.relation import Relation
-from doc.annotation import Annotation
-from doc.token import Token
+from bedrock.doc.layer import Layer
+from bedrock.doc.relation import Relation
+from bedrock.doc.annotation import Annotation
+from bedrock.doc.token import Token
 from bedrock.tagger.tagger import Tagger
 import spacy
 import pandas as pd
@@ -12,8 +12,8 @@ class SpacyTagger(Tagger):
 
     ID_OFFSET = 19
 
-    def __init__(self, spacy_model_path):
-        self.nlp = spacy.load(spacy_model_path)
+    def __init__(self, language='de'):
+        self.nlp = spacy.load(language)
         self.nlp.add_pipe(self.set_custom_boundaries, before='parser')
 
     def get_tags(self, doc: Doc):

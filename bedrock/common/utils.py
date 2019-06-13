@@ -5,11 +5,7 @@ from os import path
 import pickle
 import glob
 import pandas as pd
-
-
-def get_layer_name(type_name: str) -> str:
-    tmp = type_name.split('.')
-    return tmp[len(tmp)-1]
+from xml.sax import saxutils
 
 
 def config_to_namedtuple(config_path='config.ini'):
@@ -58,3 +54,20 @@ def get_latest_file(dir_path):
 
 def lists_to_df(lists, columns):
     return pd.DataFrame({c: l for c, l in zip(columns,lists)})
+
+
+def preprocess_text(text_raw: str) -> str:
+    """ argument text_raw: string
+        returns text_proproc: processed string in utf_8 format, escaped
+        """
+    # preprocess such that webanno and spacy text the same, no changes in Webanno
+    # side effect: lose structure of report (newline)
+    text_preproc = text_raw
+
+    # utf-8 encoding
+    text_preproc = text_preproc.strip('"')
+    text_preproc = text_preproc.replace("\n", " ")
+    text_preproc = text_preproc.replace("<br>", "\n")
+    text_preproc = ' '.join(filter(len, text_preproc.split(' ')))
+    text_preproc = saxutils.unescape(text_preproc)
+    return text_preproc

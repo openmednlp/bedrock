@@ -5,11 +5,9 @@ sudo: false
 matrix:
   include:
     - os: linux
-      python: 3.4
+      python: 3.5
     - os: linux
       python: 3.5-dev
-    - os: linux
-      python: 3.5
     - os: linux
       python: 3.6
     - os: linux
@@ -29,3 +27,6 @@ install:
   - sh bin/bedrock download de
 
 after_success: coverage report
+
+script:
+- python -m unittest tests/test_pipeline.py
