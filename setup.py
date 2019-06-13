@@ -29,7 +29,7 @@ setup(
     author='Ivan Nesic, Marko Obradovic, Pascal Düblin, Rita Achermann',
     author_email='ivan.nesic@usb.ch, marko.obradovic@usb.ch, rita.achermann@usb.ch',
     url='http://github.com/openmednlp/bedrock',
-    python_requires='>3.6',
+    python_requires='>3.4',
     packages=find_packages(include=['bedrock', 'bedrock.*']),
     install_requires=reqs,
     license='MIT',
