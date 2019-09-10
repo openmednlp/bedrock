@@ -21,7 +21,7 @@ reqs = [
 
 setup(
     name='bedrock',
-    version='0.1.0.dev11',
+    version='0.1.0.dev12',
     description=("Bedrock is a high-level text pre-processing API, "
                  "written in Python and run on Spacy as its backend."),
     long_description=long_description,

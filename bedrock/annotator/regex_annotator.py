@@ -1,4 +1,4 @@
-from bedrock.prelabel.annotator import Annotator
+from bedrock.annotator.annotator import Annotator
 from bedrock.doc.doc import Doc
 from doc.annotation import Annotation
 import pandas as pd

@@ -11,15 +11,12 @@ class TestPipeline(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        print('init')
         cls.__pipeline = Pipeline(language='de')
 
     def setUp(self):
-        print('setup')
         self.__pipeline = self.__pipeline.clear()
 
     def test_parse_text(self):
-        print(1)
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text = f.read()
         docs = self.__pipeline.parse_text(file_text).get_docs()
@@ -28,7 +25,6 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(doc.get_text(), utils.preprocess_text(file_text))
 
     def test_get_docs(self):
-        print(2)
         with open('tests/data/input/TNM_1.txt', 'r') as f:
             file_text1 = f.read()
         with open('tests/data/input/TNM_2.txt', 'r') as f:
@@ -41,7 +37,6 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(doc2.get_text(), utils.preprocess_text(file_text2))
 
     def test_parse_from_xmi(self):
-        print(3)
         docs = self.__pipeline.parse_cas('tests/data/input/TNM_1.xmi', 'tests/data/input/typesystem.xml').get_docs()
         doc = docs[0]
         self.assertEqual(doc.get_annotations().shape[0], 185)

@@ -1,6 +1,6 @@
 from bedrock.tagger.spacy_tagger import SpacyTagger
 from bedrock.doc.doc_factory import DocFactory
-from bedrock.prelabel.annotator import Annotator
+from bedrock.annotator.annotator import Annotator
 from bedrock.doc.relation import Relation
 
 
