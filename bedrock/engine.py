@@ -2,7 +2,7 @@ from bedrock.doc.doc import Doc
 from bedrock.doc.relation import Relation
 from typing import List
 from bedrock.tagger.tagger import Tagger
-from bedrock.prelabel.annotator import Annotator
+from bedrock.annotator.annotator import Annotator
 
 
 class ProcessingEngine:
