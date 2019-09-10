@@ -10,7 +10,7 @@ from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
 import _pickle as pickle
 from typing import Callable
-from bedrock.libs.CharSplit import char_split
+import bedrock.libs.CharSplit.char_split as char_split
 from typing import Set
 import warnings
 import re
