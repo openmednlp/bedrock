@@ -74,11 +74,11 @@ class TestPipeline(unittest.TestCase):
         doc = docs[0]
         annotations = doc.get_annotations()
         annotations = annotations[annotations[Annotation.LAYER] == 'layer']
-        self.assertEqual(annotations.shape[0], 6)
+        self.assertEqual(annotations.shape[0], 12)
         where = annotations[annotations[Annotation.FEATURE] == 'where']
-        self.assertEqual(where.shape[0], 4)
+        self.assertEqual(where.shape[0], 6)
         what = annotations[annotations[Annotation.FEATURE] == 'what']
-        self.assertEqual(what.shape[0], 2)
+        self.assertEqual(what.shape[0], 6)
 
     def test_run_postlabeling(self):
         with open('tests/data/input/TNM_1.txt', 'r') as f:
@@ -97,11 +97,11 @@ class TestPipeline(unittest.TestCase):
         doc = docs[0]
         annotations = doc.get_annotations()
         annotations = annotations[annotations[Annotation.LAYER] == 'layer']
-        self.assertEqual(annotations.shape[0], 2)
+        self.assertEqual(annotations.shape[0], 6)
         where = annotations[annotations[Annotation.FEATURE] == 'where']
         self.assertEqual(where.shape[0], 0)
         what = annotations[annotations[Annotation.FEATURE] == 'what']
-        self.assertEqual(what.shape[0], 2)
+        self.assertEqual(what.shape[0], 6)
 
 
 if __name__ == '__main__':

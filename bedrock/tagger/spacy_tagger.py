@@ -16,6 +16,9 @@ class SpacyTagger(Tagger):
         self.nlp = spacy.load(language)
         self.nlp.add_pipe(self.set_custom_boundaries, before='parser')
 
+    def nlp(self, text: str):
+        return self.nlp(text)
+
     def get_tags(self, doc: Doc):
         spacy_doc = self.nlp(doc.get_text())
 
