@@ -112,3 +112,6 @@ tests/data/output/*
 
 # macOS
 .DS_Store
+
+# dev test files
+tests/dev_*
