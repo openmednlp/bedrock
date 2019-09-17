@@ -1,10 +1,15 @@
 from bedrock.doc.doc import Doc
+from bedrock.doc.token import Token
+from bedrock.doc.annotation import Annotation
+from bedrock.doc.relation import Relation
 from pycas.cas.core.CasFactory import CasFactory
 from bedrock.common.cas2df import CAS2DataFrameConverter
 from typing import Any
 from bedrock.common.cas_converter_fns import CASConverterFns
 import bedrock.common.utils as utils
 import os
+import pandas as pd
+import numpy as np
 
 
 class DocFactory:
@@ -54,6 +59,22 @@ class DocFactory:
         doc.set_tokens(tokens)
         doc.set_annotations(annotations)
         doc.set_relations(relations)
+        return doc
+
+    def create_doc_from_dataframes(self, text: str, tokens: pd.DataFrame, annotations: pd.DataFrame,
+                                   relations: pd.DataFrame) -> Doc:
+        doc = Doc()
+        doc_tokens = tokens[[Token.BEGIN, Token.END, Token.POS_VALUE, Token.SENT_START, Token.DEP_TYPE, Token.GOV_ID]]
+        doc_tokens[Token.ID] = np.nan
+        doc_annotations = annotations[[Annotation.BEGIN, Annotation.END, Annotation.LAYER, Annotation.FEATURE,
+                                       Annotation.FEATURE_VAL]]
+        doc_annotations[Annotation.ID] = np.nan
+        doc_relations = relations[[Relation.BEGIN, Relation.END, Relation.LAYER, Relation.FEATURE, Relation.FEATURE_VAL,
+                                   Relation.GOV_ID, Relation.DEP_ID]]
+        doc.set_text(text)
+        doc.set_tokens(doc_tokens)
+        doc.set_annotations(doc_annotations)
+        doc.set_relations(doc_relations)
         return doc
 
     def create_doc_from_xmi_path(self, xmi_path: str, type_path: str) -> Doc:
