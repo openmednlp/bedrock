@@ -64,13 +64,51 @@ class DocFactory:
     def create_doc_from_dataframes(self, text: str, tokens: pd.DataFrame, annotations: pd.DataFrame,
                                    relations: pd.DataFrame) -> Doc:
         doc = Doc()
-        doc_tokens = tokens[[Token.BEGIN, Token.END, Token.POS_VALUE, Token.SENT_START, Token.DEP_TYPE, Token.GOV_ID]]
-        doc_tokens[Token.ID] = np.nan
-        doc_annotations = annotations[[Annotation.BEGIN, Annotation.END, Annotation.LAYER, Annotation.FEATURE,
-                                       Annotation.FEATURE_VAL]]
-        doc_annotations[Annotation.ID] = np.nan
-        doc_relations = relations[[Relation.BEGIN, Relation.END, Relation.LAYER, Relation.FEATURE, Relation.FEATURE_VAL,
-                                   Relation.GOV_ID, Relation.DEP_ID]]
+        doc_tokens = pd.DataFrame(columns=Token.COLS)
+        doc_annotations = pd.DataFrame(columns=Annotation.COLS)
+        doc_relations = pd.DataFrame(columns=Relation.COLS)
+
+        index_mapping = dict()
+
+        for _, row in tokens.iterrows():
+            doc_tokens = doc_tokens.append({
+                Token.ID: row[Token.ID],
+                Token.BEGIN: row[Token.BEGIN],
+                Token.END: row[Token.END],
+                Token.POS_VALUE: row[Token.POS_VALUE],
+                Token.SENT_START: row[Token.SENT_START],
+                Token.DEP_TYPE: row[Token.DEP_TYPE],
+                Token.GOV_ID: row[Token.GOV_ID]
+            }, ignore_index=True)
+
+        for _, row in annotations.iterrows():
+            doc_annotations = doc_annotations.append({
+                Annotation.BEGIN: row[Annotation.BEGIN],
+                Annotation.END: row[Annotation.END],
+                Annotation.LAYER: row[Annotation.LAYER],
+                Annotation.FEATURE: row[Annotation.FEATURE],
+                Annotation.FEATURE_VAL: row[Annotation.FEATURE_VAL]
+            }, ignore_index=True)
+            current_max_index = max(list(doc_annotations.index.values))
+            index_mapping[row[Annotation.ID]] = current_max_index
+
+        for _, row in relations.iterrows():
+            gov_id = row[Relation.GOV_ID]
+            if gov_id in index_mapping:
+                gov_id = index_mapping[gov_id]
+            dep_id = row[Relation.DEP_ID]
+            if dep_id in index_mapping:
+                dep_id = index_mapping[dep_id]
+            doc_relations = doc_relations.append({
+                Relation.BEGIN: row[Relation.BEGIN],
+                Relation.END: row[Relation.END],
+                Relation.LAYER: row[Relation.LAYER],
+                Relation.FEATURE: row[Relation.FEATURE],
+                Relation.FEATURE_VAL: row[Relation.FEATURE_VAL],
+                Relation.GOV_ID: gov_id,
+                Relation.DEP_ID: dep_id
+            }, ignore_index=True)
+
         doc.set_text(text)
         doc.set_tokens(doc_tokens)
         doc.set_annotations(doc_annotations)
